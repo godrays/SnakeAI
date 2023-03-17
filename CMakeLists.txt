@@ -42,5 +42,5 @@ link_directories(Externals/bzip2/master/installed/lib)
 
 
 # Target folders
-add_subdirectory(Targets/NoAIApp)
 add_subdirectory(Targets/SnakeGameLib)
+add_subdirectory(Targets/NoAIApp)

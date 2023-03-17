@@ -111,7 +111,7 @@ int main()
                 {
                     auto & block = boardBlocks[blockIndex];
                     block.setSize({float(blockWidth), float(blockHeight)});
-                    block.setPosition(x*blockWidth, y*blockHeight);
+                    block.setPosition(float(x*blockWidth), float(y*blockHeight));
 
                     auto boardObj = gameBoard[y][x];
 
