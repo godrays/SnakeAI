@@ -8,5 +8,6 @@
 #  material is strictly forbidden unless prior written permission is obtained from Arkin Terli.
 
 add_library(SnakeGameLib STATIC
+        FFNN.cpp
         SnakeGame.cpp
         )
