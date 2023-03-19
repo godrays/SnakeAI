@@ -53,42 +53,55 @@ Eigen::MatrixXd FFNN::Forward(const Eigen::MatrixXd & input)
 }
 
 
-std::vector<double> FFNN::GetAllWeightsAsVector()
+std::vector<double> FFNN::SerializeWeights()
 {
-    std::vector<double>  weightsVec;
-
-    for (const auto & weight : m_weights)
-    {
-        auto currWeightsSize = static_cast<ssize_t>(weightsVec.size());
-        weightsVec.resize(weightsVec.size() + weight.size());
-        std::copy(weight.data(), weight.data() + weight.size(), weightsVec.begin() + currWeightsSize);
-    }
-
-    return weightsVec;
+    return SerializeMatrices(m_weights);
 }
 
 
-bool FFNN::SetAllWeightsFromVector(const std::vector<double> & weightsVector)
+bool FFNN::DeserializeWeights(const std::vector<double> & weightsVector)
 {
-    size_t totalSize = 0;
-    for (const auto & weight : m_weights)
-    {
-        totalSize += weight.size();
-    }
+    return DeserializeMatrices(weightsVector, m_weights);
+}
 
-    if (weightsVector.size() != totalSize)
-    {
-        return false;
-    }
 
-    size_t copiedSize = 0;
-    for (auto & weight : m_weights)
-    {
-        std::copy(weightsVector.data() + copiedSize, weightsVector.data() + copiedSize + weight.size(), weight.data());
-        copiedSize += weight.size();
-    }
+std::vector<double> FFNN::SerializeBiases()
+{
+    return SerializeMatrices(m_biases);
+}
 
-    return true;
+
+bool FFNN::DeserializeBiases(const std::vector<double> & biasesVector)
+{
+    return DeserializeMatrices(biasesVector, m_biases);
+}
+
+
+std::vector<double> FFNN::SerializeAllParameters()
+{
+    auto vec1 = SerializeMatrices(m_weights);
+    auto vec2 = SerializeMatrices(m_biases);
+
+    auto vec1Size = vec1.size();
+    vec1.resize(vec1.size() + vec2.size());
+    std::copy(vec2.begin(), vec2.end(), vec1.begin() + vec1Size);
+
+    return vec1;
+}
+
+
+bool FFNN::DeserializeAllParameters(const std::vector<double> & vector)
+{
+    // Get the size of weights vector. The rest of them will be biases.
+    std::size_t totalMatricesSize = 0;
+    for (const auto & matrix : m_weights)
+        totalMatricesSize += matrix.size();
+
+    // Split the vector into two parts: weights and biases.
+    std::vector<double>  weightsVec(vector.begin(), vector.begin() + totalMatricesSize);
+    std::vector<double>  biasesVec(vector.begin() + totalMatricesSize, vector.end());
+
+    return DeserializeWeights(weightsVec) && DeserializeBiases(biasesVec);
 }
 
 
@@ -215,4 +228,43 @@ void FFNN::PrintAll()
     {
         std::cout << "Bias(" << bias.rows() << "," << bias.cols() << "):" << std::endl << bias << std::endl;
     }
+}
+
+
+std::vector<double> FFNN::SerializeMatrices(const std::vector<Eigen::MatrixXd> & matrices)
+{
+    std::vector<double>  resultVec;
+
+    for (const auto & matrix : matrices)
+    {
+        auto currWeightsSize = static_cast<ssize_t>(resultVec.size());
+        resultVec.resize(resultVec.size() + matrix.size());
+        std::copy(matrix.data(), matrix.data() + matrix.size(), resultVec.begin() + currWeightsSize);
+    }
+
+    return resultVec;
+}
+
+
+bool FFNN::DeserializeMatrices(const std::vector<double> & vector, std::vector<Eigen::MatrixXd> & matrices)
+{
+    size_t totalSize = 0;
+    for (const auto & matrix : matrices)
+    {
+        totalSize += matrix.size();
+    }
+
+    if (vector.size() != totalSize)
+    {
+        return false;
+    }
+
+    size_t copiedSize = 0;
+    for (auto & matrix : matrices)
+    {
+        std::copy(vector.data() + copiedSize, vector.data() + copiedSize + matrix.size(), matrix.data());
+        copiedSize += matrix.size();
+    }
+
+    return true;
 }

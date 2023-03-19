@@ -23,10 +23,22 @@ public:
     Eigen::MatrixXd Forward(const Eigen::MatrixXd & input);
 
     // Returns all weights as a single vector.
-    std::vector<double>  GetAllWeightsAsVector();
+    std::vector<double>  SerializeWeights();
 
     // Sets all weights from a vector.
-    bool SetAllWeightsFromVector(const std::vector<double> & weightsVector);
+    bool DeserializeWeights(const std::vector<double> & weightsVector);
+
+    // Returns all biases as a single vector.
+    std::vector<double>  SerializeBiases();
+
+    // Sets all biases from a vector.
+    bool DeserializeBiases(const std::vector<double> & biasesVector);
+
+    // Returns all parameters, weights + biases, as a single vector.
+    std::vector<double>  SerializeAllParameters();
+
+    // Sets all parameters, weights + biases, from a vector.
+    bool DeserializeAllParameters(const std::vector<double> & vector);
 
     // Save the network into a file.
     bool Save(const std::string & filename);
@@ -36,6 +48,13 @@ public:
 
     // Prints all interval variables and states.
     void PrintAll();
+
+private:
+    // Serialize all matrices into a single vector.
+    std::vector<double> SerializeMatrices(const std::vector<Eigen::MatrixXd> & matrices);
+
+    // Deserialize a vector into source matrices.
+    bool DeserializeMatrices(const std::vector<double> & vector, std::vector<Eigen::MatrixXd> & matrices);
 
 private:
     std::vector<Eigen::MatrixXd>  m_weights;
