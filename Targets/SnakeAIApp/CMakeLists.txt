@@ -7,12 +7,13 @@
 #  trade secret or copyright law. Dissemination of this information or reproduction of this
 #  material is strictly forbidden unless prior written permission is obtained from Arkin Terli.
 
-add_executable(NoAIApp
+add_executable(SnakeAIApp
         main.cpp
+        NoAICmd.cpp
         )
 
 if (APPLE)
-    target_link_libraries(NoAIApp PRIVATE
+    target_link_libraries(SnakeAIApp PRIVATE
             "-ObjC"
             "-framework Carbon"
             "-framework CoreFoundation"
@@ -23,6 +24,7 @@ if (APPLE)
             bz2_static
             z
             freetype
+            docopt
             sfml-audio-s
             sfml-graphics-s
             sfml-network-s
@@ -31,11 +33,12 @@ if (APPLE)
             SnakeGameLib
             )
 elseif (LINUX)
-    target_link_libraries(NoAIApp
+    target_link_libraries(SnakeAIApp
             dl pthread GL
             bz2_static
             z
             freetype
+            docopt
             sfml-audio-s
             sfml-graphics-s
             sfml-network-s

@@ -7,16 +7,74 @@
 //  trade secret or copyright law. Dissemination of this information or reproduction of this
 //  material is strictly forbidden unless prior written permission is obtained from Arkin Terli.
 
+// Project includes
+#include "NoAICmd.hpp"
 #include <FontSFNSMono.hpp>
 #include <SnakeGame.hpp>
+// External includes
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
-
-#include <vector>
+// System includes
 #include <iostream>
+#include <vector>
 
 
-int main()
+namespace sai::cmd
+{
+
+void NoAICmd::Run(int argc, const char *argv[])
+{
+    static const char USAGE[] =
+    R"(
+    Usage:
+        SnakeAIApp noai
+
+    Options:
+
+    )";
+
+    std::map <std::string, docopt::value> args;
+
+    try
+    {
+        // Parse cmd-line parameters.
+        args = docopt::docopt(USAGE, {argv + 1, argv + argc}, false, "SnakeAI 1.0.0");
+    }
+    catch (...)
+    {
+        std::cerr << "Invalid commandline parameter usage. Please use '--help' parameter for more information."
+                  << std::endl;
+        return;
+    }
+
+    if (!ValidateArguments(args, USAGE))
+    {
+        return;
+    }
+
+    // Execute the command.
+    ExecuteCommand(args);
+}
+
+
+bool NoAICmd::ValidateArguments(std::map <std::string, docopt::value> &args, const char *USAGE)
+{
+    // Show help if necessary
+    if (args["-h"] || args["--help"])
+    {
+        std::cout << USAGE << std::endl;
+        return false;
+    }
+
+    // VALIDATE REQUIRED ARGUMENTS
+
+    // TODO: Validate the rest of the cmd-line parameters values here.
+
+    return true;
+}
+
+
+void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 {
     int windowWidth  = 500;
     int windowHeight = 500;
@@ -26,11 +84,7 @@ int main()
     window.setFramerateLimit(60);
 
     sf::Font font;
-    if (!font.loadFromMemory(FontSFNSMono, sizeof(FontSFNSMono)))
-    {
-        std::cerr << "Failed to load font!" << std::endl;
-        return -1;
-    }
+    font.loadFromMemory(FontSFNSMono, sizeof(FontSFNSMono));
 
     sf::Text text("", font, 10);
     text.setPosition(10, 10);
@@ -169,6 +223,6 @@ int main()
         // Display the window content on the screen
         window.display();
     }
-
-    return 0;
 }
+
+} // namespace sai

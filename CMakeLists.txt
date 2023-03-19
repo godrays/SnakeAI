@@ -33,6 +33,7 @@ include_directories(Externals/freetype/2-12-1/installed/include)
 include_directories(Externals/zlib/1.2.13/installed/include)
 include_directories(Externals/bzip2/master/installed/include)
 include_directories(Externals/eigen/3.4.0/installed/include/eigen3)
+include_directories(Externals/docopt/0.6.3/installed/include)
 include_directories(Targets/SnakeGameLib)
 
 # Lib folders
@@ -40,8 +41,9 @@ link_directories(Externals/sfml/2.6.x/installed/lib)
 link_directories(Externals/freetype/2-12-1/installed/lib)
 link_directories(Externals/zlib/1.2.13/installed/lib)
 link_directories(Externals/bzip2/master/installed/lib)
+link_directories(Externals/docopt/0.6.3/installed/lib)
 
 
 # Target folders
 add_subdirectory(Targets/SnakeGameLib)
-add_subdirectory(Targets/NoAIApp)
+add_subdirectory(Targets/SnakeAIApp)
