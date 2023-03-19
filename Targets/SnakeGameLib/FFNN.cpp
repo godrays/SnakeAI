@@ -184,10 +184,6 @@ bool FFNN::Load(const std::string & filename)
         layers.emplace_back(hiddenLayerSize);
     }
 
-    for (auto val : layers)
-        std::cout << val << "|";
-    std::cout << std::endl;
-
     Init(layers);
 
     // Read all weights matrices.
