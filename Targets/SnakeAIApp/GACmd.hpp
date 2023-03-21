@@ -40,6 +40,8 @@ protected:
 
     void PlayModel(const std::string & modelFilename);
     void TrainModel(const std::string & modelFilename);
+    double SimulateSnakeGames(std::size_t samplingSize, const std::vector<double> & value,
+                              const std::vector<int> & ffnnLayers, int rndSeed);
 };
 
 }

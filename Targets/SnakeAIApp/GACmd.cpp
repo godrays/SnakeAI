@@ -243,10 +243,7 @@ void GACmd::PlayModel(const std::string & modelFilename)
 void GACmd::TrainModel(const std::string & modelFilename)
 {
     std::srand(std::time(nullptr));
-    int seed = rand();
-
-    const std::size_t  gameBoardWidth  = 10;
-    const std::size_t  gameBoardHeight = 10;
+    int rndSeed = rand();
 
     // First determine genetic material size.
     int modelInputSize = static_cast<int>(SnakeGame::GetParameterSize());
@@ -258,71 +255,21 @@ void GACmd::TrainModel(const std::string & modelFilename)
     const std::size_t  populationSize    = 20000;
     const std::size_t  parentRatio       = 50;
     const std::size_t  mutateProbability = 5;
-    const std::size_t  transferRatio     = 15;
+    const std::size_t  transferRatio     = 20;
     const std::size_t  crossover         = 50;
+    const std::size_t  samplingSize      = 1;    // Game sampling size per individual per generation.
 
     ga::GeneticAlgorithm<double>  ga(populationSize, parentRatio, mutateProbability, transferRatio, crossover,
                                      geneticMaterialSize);
 
     // This method will calculate fitness value for each individual.
-    ga.SetFitnessFunc([&](const std::vector<double> & value) -> double
+    ga.SetFitnessFunc([&](const std::vector<double> & chromosome) -> double
     {
-        // Setup a neural network.
-        FFNN  ffnn;
-        ffnn.Init(ffnnLayers);
-        // Set weights and biases coming from genetic algorithm.
-        ffnn.DeserializeAllParameters(value);   // value = genetic material vector
-
-        // Create a new snake game.
-        SnakeGame snakeGame(gameBoardWidth, gameBoardHeight, seed);
-        std::size_t numOfUpdates = 0;
-        double avgDistanceToApple = 0;
-        double prevDistToApple = -1;
-        double moveToAppleScore = 0;    // Increments everytime snake gets closer to apple, otherwise it's decreased.
-
-        while (snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateRunning)
-        {
-            // Get game parameters to use as inputs to neural network model.
-            auto modelInputs = snakeGame.GetParameters();
-            auto inputs = Eigen::Map<Eigen::RowVectorXd>(modelInputs.data(), modelInputs.size());
-
-            // Make prediction and get new snake directions as model outputs.
-            auto outputs = ffnn.Forward(inputs);
-
-            // Determine the best direction from model outputs. The highest value should be the new direction.
-            SnakeDirection newDir = SnakeDirection::kSnakeDirUp;
-            double maxValue = outputs(0, 0);
-            if (maxValue < outputs(0, 1)) { newDir = SnakeDirection::kSnakeDirDown; maxValue = outputs(0, 1); }
-            if (maxValue < outputs(0, 2)) { newDir = SnakeDirection::kSnakeDirLeft; maxValue = outputs(0, 2); }
-            if (maxValue < outputs(0, 3)) { newDir = SnakeDirection::kSnakeDirRight; }
-            snakeGame.SetDirection(newDir);
-
-            avgDistanceToApple += snakeGame.GetDistanceToApple();
-
-            // Update game.
-            snakeGame.Update();
-
-            // More updates gives an individual to survive longer.
-            numOfUpdates++;
-            // Calculate move to apple score.
-            if (prevDistToApple >= 0)
-                moveToAppleScore += snakeGame.GetDistanceToApple() <= prevDistToApple ? 1 : -1;
-            prevDistToApple = snakeGame.GetDistanceToApple();
-        }
-
-        if (snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateWon)
-        {
-            std::cout << "Won Game!" << std::endl;
-        }
-
-        // Now game stopped here. We need to calculate fitness value to tell the genetic algorithm that how well
-        // the neural network has played the game so far. Fitness value calculate is very important.
-        double score = snakeGame.GetScore();
-        return std::pow(score+1,3) * moveToAppleScore*10 - 100*(avgDistanceToApple/numOfUpdates);
-        return numOfUpdates + (std::pow(2,score) + std::pow(score, 2.1) * 500) - (std::pow(score, 2.1) * std::pow(0.25*numOfUpdates, 1.3));
+        double fitness = SimulateSnakeGames(samplingSize, chromosome, ffnnLayers, rndSeed);
+        return fitness;
     });
 
-    // This method will generate random item for a genetic material.
+    // This method will generate random item (genes) for a genetic material/chromosome.
     ga.SetRandomItemFunc([]() -> double
     {
         double min = -1;
@@ -359,6 +306,77 @@ void GACmd::TrainModel(const std::string & modelFilename)
     auto valueVec = ga.GetBestIndividual().GetValue();
     auto fitness = ga.GetBestIndividual().GetFitness();
     std::cout << ga.GetGeneration() << ". Fitness: " << fitness << std::endl;
+}
+
+
+double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<double> & value,
+                                 const std::vector<int> & ffnnLayers, int rndSeed)
+{
+    const std::size_t  gameBoardWidth  = 10;
+    const std::size_t  gameBoardHeight = 10;
+
+    // Setup a neural network.
+    FFNN  ffnn;
+    ffnn.Init(ffnnLayers);
+    // Set weights and biases coming from genetic algorithm.
+    ffnn.DeserializeAllParameters(value);   // value = genetic material vector = chromosome
+
+    // Create a new snake game.
+    SnakeGame snakeGame(gameBoardWidth, gameBoardHeight, rndSeed);
+
+    std::size_t numOfUpdates = 0;
+    double avgDistanceToApple = 0;
+    double prevDistToApple = -1;
+    double moveToAppleScore = 0;    // Increments everytime snake gets closer to apple, otherwise it's decreased.
+
+    // Run the same model N times to assess quality of the individual (chromosome/array of genes/NN Model weights).
+    for (std::size_t i=0; i<samplingSize; ++i)
+    {
+        while (snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateRunning)
+        {
+            // Get game parameters to use as inputs to neural network model.
+            auto modelInputs = snakeGame.GetParameters();
+            auto inputs = Eigen::Map<Eigen::RowVectorXd>(modelInputs.data(), modelInputs.size());
+
+            // Make prediction and get new snake directions as model outputs.
+            auto outputs = ffnn.Forward(inputs);
+
+            // Determine the best direction from model outputs. The highest value should be the new direction.
+            SnakeDirection newDir = SnakeDirection::kSnakeDirUp;
+            double maxValue = outputs(0, 0);
+            if (maxValue < outputs(0, 1)) { newDir = SnakeDirection::kSnakeDirDown; maxValue = outputs(0, 1); }
+            if (maxValue < outputs(0, 2)) { newDir = SnakeDirection::kSnakeDirLeft; maxValue = outputs(0, 2); }
+            if (maxValue < outputs(0, 3)) { newDir = SnakeDirection::kSnakeDirRight; }
+            snakeGame.SetDirection(newDir);
+
+            avgDistanceToApple += snakeGame.GetDistanceToApple();
+
+            // Update game.
+            snakeGame.Update();
+
+            // More updates gives an individual to survive longer.
+            numOfUpdates++;
+            // Calculate move to apple score.
+            if (prevDistToApple >= 0)
+                moveToAppleScore += snakeGame.GetDistanceToApple() <= prevDistToApple ? 1 : -1;
+            prevDistToApple = snakeGame.GetDistanceToApple();
+        }
+
+        if (snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateWon)
+        {
+            std::cout << "AI Won The Game!" << std::endl;
+        }
+
+        snakeGame.Reset();
+    }
+
+    // Now game stopped here. We need to calculate fitness value to tell the genetic algorithm that how well
+    // the neural network has played the game so far. Fitness value calculate is very important.
+    double score = snakeGame.GetScore();
+    double patrollingPenalty = snakeGame.GetSteps() >= gameBoardWidth * gameBoardHeight ? 1 : 0;
+    return score*20 + numOfUpdates*1 + moveToAppleScore*10 - patrollingPenalty*5 - (avgDistanceToApple/numOfUpdates)*5;
+    //return std::pow(score+1,3) * moveToAppleScore*10 - 100*(avgDistanceToApple/numOfUpdates);
+    //return numOfUpdates + (std::pow(2,score) + std::pow(score, 2.1) * 500) - (std::pow(score, 2.1) * std::pow(0.25*numOfUpdates, 1.3));
 }
 
 } // namespace sai
