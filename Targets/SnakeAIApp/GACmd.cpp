@@ -102,7 +102,7 @@ void GACmd::PlayModel(const std::string & modelFilename)
     int windowHeight = 500;
 
     // Create a window with a resolution of 800x600 and a title
-    sf::RenderWindow   window(sf::VideoMode(windowWidth, windowHeight), "Snake - No AI");
+    sf::RenderWindow   window(sf::VideoMode(windowWidth, windowHeight), "Snake AI Model Play Mode");
 
     sf::Font font;
     font.loadFromMemory(FontSFNSMono, sizeof(FontSFNSMono));
@@ -267,7 +267,7 @@ void GACmd::TrainModel(const std::string & modelFilename)
 
     const std::size_t  populationSize    = 20000;
     const std::size_t  parentRatio       = 50;
-    const std::size_t  mutateProbability = 1;
+    const std::size_t  mutateProbability = 5;
     const std::size_t  transferRatio     = 15;
     const std::size_t  crossover         = 50;
 
