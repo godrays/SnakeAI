@@ -10,6 +10,7 @@
 add_executable(SnakeAIApp
         main.cpp
         NoAICmd.cpp
+        GACmd.cpp
         )
 
 if (APPLE)
@@ -20,14 +21,14 @@ if (APPLE)
             "-framework OpenGL"
             "-framework Cocoa"
             "-framework IOKit"
-            "-framework AudioUnit"
+#            "-framework AudioUnit"
             bz2_static
             z
             freetype
             docopt
-            sfml-audio-s
+#            sfml-audio-s
             sfml-graphics-s
-            sfml-network-s
+#            sfml-network-s
             sfml-system-s
             sfml-window-s
             SnakeGameLib
@@ -39,9 +40,9 @@ elseif (LINUX)
             z
             freetype
             docopt
-            sfml-audio-s
+#            sfml-audio-s
             sfml-graphics-s
-            sfml-network-s
+#            sfml-network-s
             sfml-system-s
             sfml-window-s
             SnakeGameLib

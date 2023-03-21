@@ -9,6 +9,7 @@
 
 // Project includes
 #include "NoAICmd.hpp"
+#include "GACmd.hpp"
 // External includes
 // System includes
 #include <exception>
@@ -32,6 +33,8 @@ int main(int argc, const char* argv[])
 
         noai                  User controlled snake game. No AI is used.
 
+        ga                    Use genetic algorithm to train or to play.
+
     Use 'SnakeAIApp <command> -h' for more information on a specific command.
     )";
 
@@ -46,6 +49,11 @@ int main(int argc, const char* argv[])
         else if (args[0] == "noai")
         {
             sai::cmd::NoAICmd cmd;
+            cmd.Run(argc, argv);
+        }
+        else if (args[0] == "ga")
+        {
+            sai::cmd::GACmd cmd;
             cmd.Run(argc, argv);
         }
         else
