@@ -9,10 +9,12 @@
 
 #pragma once
 
+// Project includes
 #include <ThreadPool.hpp>
-
-#include <vector>
+// External includes
+// System includes
 #include <future>
+#include <vector>
 
 
 namespace ga
@@ -22,6 +24,10 @@ template<typename T>
 class Individual
 {
 public:
+    Individual() : m_fitness(0)
+    {
+    }
+
     explicit Individual(std::vector<T> value) : m_value{std::move(value)}, m_fitness(0)
     {
     }
@@ -71,17 +77,31 @@ public:
 
     void CreateInitialGeneration()
     {
-        m_population.reserve(m_maxPopulation);
+        // Create thread pool to calculate fitness functions.
+        ThreadPool  tp(std::thread::hardware_concurrency());
+        m_population.resize(m_maxPopulation);
 
-        // Create the population without calculating fitness values.
+        std::vector<std::future<void>>  results;
         for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
-            // Generate random generic material value.
-            std::vector<T>  value(m_geneticMaterialLength, 0);
-            std::generate_n(value.begin(), m_geneticMaterialLength, m_randomItemFunc);
+            auto futureRet = tp.Enqueue([&](std::size_t i)
+            {
+                // Generate random generic material value.
+                std::vector<T>  value(m_geneticMaterialLength, 0);
+                std::generate_n(value.begin(), m_geneticMaterialLength, m_randomItemFunc);
 
-            Individual<T> newChild{value};
-            m_population.emplace_back(newChild);
+                Individual<T> newChild{value};
+                m_population[i] = newChild;
+            }, i);
+
+            results.emplace_back(std::move(futureRet));
+        }
+
+        // Wait until all threads are finished.
+        for (std::size_t i=0; i<m_maxPopulation; ++i)
+        {
+            results[i].wait();
+            results[i].get();     // We don't have a return value but this will rethrow an uncaught exception.
         }
 
         CalculatePopulationFitnessValues();
@@ -92,18 +112,36 @@ public:
     void CreateNextGeneration()
     {
         std::vector<Individual<T>>  nextGeneration;
-        nextGeneration.reserve(m_population.size());
+        nextGeneration.resize(m_maxPopulation);
 
-        for (std::size_t i=0; i<m_transferCount; ++i)
+        // Create thread pool to calculate fitness functions.
+        ThreadPool  tp(std::thread::hardware_concurrency());
+
+        std::vector<std::future<void>>  results;
+        for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
-            nextGeneration.emplace_back(m_population[i]);
+            auto futureRet = tp.Enqueue([&](std::size_t i)
+            {
+                if (i < m_transferCount)
+                {
+                    nextGeneration[i] = m_population[i];
+                }
+                else
+                {
+                    Individual<T> & mother = m_population[GetRandomNumber(0, m_crossoverThreshold)];
+                    Individual<T> & father = m_population[GetRandomNumber(0, m_crossoverThreshold)];
+                    nextGeneration[i] = CreateChild(mother, father, m_parentRatio, m_mutateProbability);
+                }
+            }, i);
+
+            results.emplace_back(std::move(futureRet));
         }
 
-        for (std::size_t i=0; i<m_newIndividualsPerGeneration; ++i)
+        // Wait until all threads are finished.
+        for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
-            Individual<T> & mother = m_population[GetRandomNumber(0, m_crossoverThreshold)];
-            Individual<T> & father = m_population[GetRandomNumber(0, m_crossoverThreshold)];
-            nextGeneration.emplace_back(CreateChild(mother, father, m_parentRatio, m_mutateProbability));
+            results[i].wait();
+            results[i].get();     // We don't have a return value but this will rethrow an uncaught exception.
         }
 
         m_population = nextGeneration;
