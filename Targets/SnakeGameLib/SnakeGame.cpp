@@ -7,8 +7,10 @@
 //  trade secret or copyright law. Dissemination of this information or reproduction of this
 //  material is strictly forbidden unless prior written permission is obtained from Arkin Terli.
 
+// Project includes
 #include "SnakeGame.hpp"
-
+// External includes
+// System includes
 #include <random>
 
 
@@ -16,6 +18,16 @@ void SnakeGame::Update()
 {
     if (m_gameState != SnakeGameState::kSnakeGameStateRunning)
     {
+        return;
+    }
+
+    m_steps++;    // Number of iterations until snake eats an apple.
+
+    // If snake can't get the apple in 100 iterations than kill the game. Longer the same becomes
+    // more chance to survive.
+    if (m_steps > std::size_t(m_boardWidth * m_boardHeight))
+    {
+        m_gameState = SnakeGameState::kSnakeGameStateFailed;
         return;
     }
 
@@ -39,12 +51,18 @@ void SnakeGame::Update()
             break;
     }
 
-    auto boardObj = m_board[newHeadPos.y][newHeadPos.x];
-
     // Check if the snake is in the boundary conditions
     if (newHeadPos.x < 0 || newHeadPos.x >= m_boardWidth ||
-        newHeadPos.y < 0 || newHeadPos.y >= m_boardHeight ||
-        boardObj == BoardObjType::kBoardObjSnakeHead ||
+        newHeadPos.y < 0 || newHeadPos.y >= m_boardHeight)
+    {
+        m_gameState = SnakeGameState::kSnakeGameStateFailed;
+        return;
+    }
+
+    auto boardObj = m_board[newHeadPos.y][newHeadPos.x];
+
+    // Check if the snake touches its own body.
+    if (boardObj == BoardObjType::kBoardObjSnakeHead ||
         boardObj == BoardObjType::kBoardObjSnakeBody)
     {
         m_gameState = SnakeGameState::kSnakeGameStateFailed;
@@ -58,6 +76,8 @@ void SnakeGame::Update()
     if (newHeadPos.x == m_applePos.x && newHeadPos.y == m_applePos.y)
     {
         m_score++;
+        m_steps = 0;
+
         if (!PlaceApple())
         {
             m_gameState = SnakeGameState::kSnakeGameStateWon;
@@ -78,43 +98,107 @@ void SnakeGame::Update()
 
 void SnakeGame::Reset()
 {
+    m_steps = 0;
     m_score = 0;
+    m_snake.clear();
+    m_gameState = SnakeGameState::kSnakeGameStateRunning;
     m_direction = SnakeDirection::kSnakeDirUp;
 
     Position  snakeHead;
-    snakeHead.x = static_cast<int>(GetRandomNumber(float(m_boardWidth)/2, 3*float(m_boardWidth)/4-1));
-    snakeHead.y = static_cast<int>(GetRandomNumber(float(m_boardWidth)/2, 3*float(m_boardHeight)/4-1));
+    snakeHead.x = static_cast<int>(GetRandomNumber(2, m_boardWidth-2));
+    snakeHead.y = static_cast<int>(GetRandomNumber(2, m_boardHeight-2));
 
     // Add snake head.
     m_snake.emplace_back(snakeHead);
 
-    snakeHead.y++;
-
     // Add snake body.
+    snakeHead.y++;
     m_snake.emplace_back(snakeHead);
 
     ClearBoard();
     RenderSnake();
     PlaceApple();
     RenderApple();
-
-    m_gameState = SnakeGameState::kSnakeGameStateRunning;
 }
 
 
-double SnakeGame::GetRandomNumber(double start, double end)
+std::vector<double> SnakeGame::GetParameters()
 {
-    // Create a random device
-    std::random_device  rd;
+    std::vector<double>  params;
 
-    // Initialize a Mersenne Twister pseudo-random number generator with the random device's seed
-    std::mt19937  gen(rd());
+    Position snakeHeadPos = m_snake.front();
 
-    // Define a uniform_real_distribution for the range [0, 1)
-    std::uniform_real_distribution<>  dis(start, end);
+    // Distance from snake's head to boarder of the game boards. (8 parameters)
+    double N = snakeHeadPos.y;
+    double S = m_boardHeight - 1 - snakeHeadPos.y;
+    double W = snakeHeadPos.x;
+    double E = m_boardWidth - 1 - snakeHeadPos.x;
+    double NW = GetDistance(snakeHeadPos, -1, -1, false);
+    double NE = GetDistance(snakeHeadPos,  1, -1, false);
+    double SW = GetDistance(snakeHeadPos, -1,  1, false);
+    double SE = GetDistance(snakeHeadPos,  1,  1, false);
 
-    // Generate and return a random number in the specified range
-    return dis(gen);
+    // Distance from snake's head to either snake's body or game board borders. (8 parameters)
+    double sN = GetDistance(snakeHeadPos,  0, -1, true);
+    double sS = GetDistance(snakeHeadPos,  0,  1, true);
+    double sW = GetDistance(snakeHeadPos, -1,  0, true);
+    double sE = GetDistance(snakeHeadPos,  1,  0, true);
+    double sNW = GetDistance(snakeHeadPos, -1, -1, true);
+    double sNE = GetDistance(snakeHeadPos,  1, -1, true);
+    double sSW = GetDistance(snakeHeadPos, -1,  1, true);
+    double sSE = GetDistance(snakeHeadPos,  1,  1, true);
+
+    // Direction to apple from snake's head. (2 parameters)
+    double aN = m_applePos.y < snakeHeadPos.y ? 1 : 0;
+    double aS = m_applePos.y > snakeHeadPos.y ? 1 : 0;
+    double aW = m_applePos.x < snakeHeadPos.x ? 1 : 0;
+    double aE = m_applePos.x > snakeHeadPos.x ? 1 : 0;
+
+    // Snake's current moving direction.  (4 parameters)
+    double snakesDirUp    = 0;
+    double snakesDirDown  = 0;
+    double snakesDirLeft  = 0;
+    double snakesDirRight = 0;
+
+    switch (m_direction)
+    {
+        case SnakeDirection::kSnakeDirUp:    snakesDirUp    = 1;  break;
+        case SnakeDirection::kSnakeDirDown:  snakesDirDown  = 1;  break;
+        case SnakeDirection::kSnakeDirLeft:  snakesDirLeft  = 1;  break;
+        case SnakeDirection::kSnakeDirRight: snakesDirRight = 1;  break;
+        default: break;
+    }
+
+    // Distance to apple. (1 parameter)
+    double appleDist = GetDistanceToApple();
+
+    // Size of snake.  (1 parameter)
+    double snakeSize = m_snake.size();
+
+    params = {
+        N, S, W, E, NW, NE, SW, SE,
+        sN, sS, sW, sE, sNW, sNE, sSW, sSE,
+        aN, aS, aW, aE,
+        snakesDirUp, snakesDirDown, snakesDirLeft, snakesDirRight,
+        appleDist,
+        snakeSize,
+    };
+
+    if (params.size() != m_parameterSize)
+    {
+        throw std::runtime_error("Parameter size does not match!");
+    }
+
+    return params;
+}
+
+
+int64_t SnakeGame::GetRandomNumber(int64_t min, int64_t max)
+{
+    // EXTREMELY IMPORTANT: Each game must have it's own random number sequence.
+    //std::default_random_engine rndEng(m_seed);
+    std::uniform_int_distribution<int>  dist(min, max);
+    return dist(m_rndEng);
 }
 
 
@@ -179,8 +263,40 @@ bool SnakeGame::PlaceApple()
         return false;
     }
 
-    auto newSpotIndex = static_cast<int>(GetRandomNumber(0, double(emptySpots.size())-1));
+    auto newSpotIndex = GetRandomNumber(0, emptySpots.size()-1);
     m_applePos = emptySpots[newSpotIndex];
 
     return true;
+}
+
+
+double SnakeGame::GetDistance(const Position & pos, int xDir, int yDir, bool useSnakeBody)
+{
+    auto intersectionPos = pos;
+    double distance = 0;    // Measured in blocks.
+
+    // Find the intersection point on a boarder of the game board.
+    while (intersectionPos.x + xDir >= 0 && intersectionPos.y + yDir >= 0 &&
+           intersectionPos.x + xDir < m_boardWidth && intersectionPos.y + yDir < m_boardHeight &&
+           (!useSnakeBody ||
+            (m_board[intersectionPos.y + yDir][intersectionPos.x + xDir] != BoardObjType::kBoardObjSnakeHead &&
+             m_board[intersectionPos.y + yDir][intersectionPos.x + xDir] != BoardObjType::kBoardObjSnakeBody)))
+    {
+        intersectionPos.x += xDir;
+        intersectionPos.y += yDir;
+        distance += 1;
+    }
+
+    return distance;
+}
+
+
+double SnakeGame::GetDistanceToApple()
+{
+    Position pos = m_snake.front();
+
+    double dx = m_applePos.x - pos.x;
+    double dy = m_applePos.y - pos.y;
+
+    return std::sqrt(dx*dx + dy*dy);
 }

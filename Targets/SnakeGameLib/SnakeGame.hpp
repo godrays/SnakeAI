@@ -9,8 +9,12 @@
 
 #pragma once
 
-#include <vector>
+// Project includes
+// External includes
+// System includes
 #include <list>
+#include <random>
+#include <vector>
 
 
 enum class SnakeDirection : int32_t
@@ -51,29 +55,37 @@ class SnakeGame
 {
 public:
     // Constructor
-    explicit SnakeGame(int boardWidth, int boardHeight) :
-        m_boardWidth{boardWidth},
-        m_boardHeight{boardHeight},
-        m_direction{SnakeDirection::kSnakeDirUp},
-        m_gameState{SnakeGameState::kSnakeGameStateInvalid},
-        m_score{0}
+    explicit SnakeGame(int boardWidth, int boardHeight, int seed) :
+            m_boardWidth{boardWidth},
+            m_boardHeight{boardHeight},
+            m_direction{SnakeDirection::kSnakeDirUp},
+            m_gameState{SnakeGameState::kSnakeGameStateInvalid},
+            m_score{0},
+            m_steps{0},
+            m_rndEng(seed)
     {
         // Initialize board 2D game board.
-        m_board.resize(boardHeight, std::vector<BoardObjType>(boardWidth, BoardObjType::kBoardObjEmpty));
+        m_board.resize(m_boardHeight, std::vector<BoardObjType>(m_boardWidth, BoardObjType::kBoardObjEmpty));
 
         Reset();
     }
 
     // Returns 2D Game board.
-    std::vector<std::vector<BoardObjType>> GetBoard()
+    BoardObjType GetBoardObject(int x, int y)
     {
-        return m_board;
+        return m_board[y][x];
     }
 
     // Set direction of snake
-    void SetDirection(const SnakeDirection & dir)
+    void SetDirection(const SnakeDirection & newDir)
     {
-        m_direction = dir;
+        // Ignore direction change if the change is opposite side of the direction.
+        if (m_direction == SnakeDirection::kSnakeDirUp    && newDir == SnakeDirection::kSnakeDirDown)  return;
+        if (m_direction == SnakeDirection::kSnakeDirDown  && newDir == SnakeDirection::kSnakeDirUp)    return;
+        if (m_direction == SnakeDirection::kSnakeDirLeft  && newDir == SnakeDirection::kSnakeDirRight) return;
+        if (m_direction == SnakeDirection::kSnakeDirRight && newDir == SnakeDirection::kSnakeDirLeft)  return;
+
+        m_direction = newDir;
     }
 
     // Returns direction of snake
@@ -99,9 +111,27 @@ public:
     // Resets game into initial state.
     void Reset();
 
+    // Returns parameter size that can be used in AI model training.
+    static std::size_t GetParameterSize()
+    {
+        return m_parameterSize;
+    }
+
+    // Returns parameters that can be used in AI model training.
+    std::vector<double> GetParameters();
+
+    // Returns distance from snake heads to apple.
+    double GetDistanceToApple();
+
+    // Return number of steps  snake took without eating an apple.
+    std::size_t GetSteps() const
+    {
+        return m_steps;
+    }
+
 private:
     // Return a random number between 0 and 1.
-    static double GetRandomNumber(double start, double end);
+    int64_t GetRandomNumber(int64_t min, int64_t max);
 
     // Clears the board.
     void ClearBoard();
@@ -115,6 +145,9 @@ private:
     // Returns true if a spot found and for an Apple on the board.
     bool PlaceApple();
 
+    // Returns distance in block for cross directions.
+    double GetDistance(const Position & pos, int xDir, int yDir, bool useSnakeBody);
+
 private:
     int  m_boardWidth;
     int  m_boardHeight;
@@ -123,8 +156,9 @@ private:
     std::list<Position>  m_snake;
     SnakeDirection  m_direction;
     SnakeGameState  m_gameState;
-
     Position  m_applePos;
-
     int m_score;
+    std::size_t  m_steps;
+    std::mt19937_64   m_rndEng;
+    static const std::size_t  m_parameterSize{26};
 };

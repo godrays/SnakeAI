@@ -27,9 +27,11 @@ void NoAICmd::Run(int argc, const char *argv[])
     static const char USAGE[] =
     R"(
     Usage:
-        SnakeAIApp noai
+        SnakeAIApp noai [usestep]
 
     Options:
+
+        usestep               Update game per keypress only.
 
     )";
 
@@ -76,6 +78,10 @@ bool NoAICmd::ValidateArguments(std::map <std::string, docopt::value> &args, con
 
 void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 {
+    std::srand(std::time(nullptr));
+
+    bool useStep = args["usestep"].asBool();
+
     int windowWidth  = 500;
     int windowHeight = 500;
 
@@ -96,15 +102,23 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
     int boardWidth  = windowWidth  / blockWidth;
     int boardHeight = windowHeight / blockHeight;
 
-    SnakeGame   snakeGame(boardWidth, boardHeight);
+    SnakeGame   snakeGame(boardWidth, boardHeight, rand());
     std::vector<sf::RectangleShape>  boardBlocks(boardWidth * boardHeight);
+    std::for_each(boardBlocks.begin(), boardBlocks.end(),
+                  [&](sf::RectangleShape & shape) {
+                      shape.setSize({float(blockWidth), float(blockHeight)});
+                      shape.setOutlineThickness(2);
+                      shape.setOutlineColor(sf::Color::Black);
+                  });
 
     sf::Clock clock;
-    float  elapsedTime;
+    float  elapsedTime = 10;
 
     // Main loop
     while (window.isOpen())
     {
+        bool updateGame = !useStep;
+
         // Time elapsed between two frames.
         float deltaTime = clock.restart().asSeconds();
 
@@ -119,8 +133,9 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
             }
 
             // Check if the event is a key pressed event
-            if (event.type == sf::Event::KeyPressed)
+            if (event.type == sf::Event::KeyReleased)
             {
+                updateGame = true;
                 // Check if the pressed key is the space key
                 if (event.key.code == sf::Keyboard::Escape)
                 {
@@ -149,13 +164,16 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
         window.clear(sf::Color::Black);
 
         // Call game update only every one second to slow down the snake movement.
-        elapsedTime += deltaTime;
-        if (elapsedTime > 0.25)
+        if (elapsedTime == 10 || (elapsedTime > 0.25 && updateGame))
         {
             snakeGame.Update();
+            if (snakeGame.GetGameState() != SnakeGameState::kSnakeGameStateRunning)
+            {
+                snakeGame.Reset();
+            }
+
             elapsedTime = 0;
 
-            auto gameBoard = snakeGame.GetBoard();
             int blockIndex = 0;
 
             // Render game board.
@@ -167,7 +185,7 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
                     block.setSize({float(blockWidth), float(blockHeight)});
                     block.setPosition(float(x*blockWidth), float(y*blockHeight));
 
-                    auto boardObj = gameBoard[y][x];
+                    auto boardObj = snakeGame.GetBoardObject(x, y);
 
                     if (boardObj == BoardObjType::kBoardObjSnakeHead)
                     {
@@ -215,6 +233,7 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
                 break;
         }
 
+        auto params = snakeGame.GetParameters();
         text.setString("Delta Time (ms): " + std::to_string(deltaTime*1000) +
                        "\nGame State: " + gameStateStr +
                        "\nGame Score: " + std::to_string(snakeGame.GetScore()*100));
@@ -222,6 +241,8 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 
         // Display the window content on the screen
         window.display();
+
+        elapsedTime += deltaTime;
     }
 }
 
