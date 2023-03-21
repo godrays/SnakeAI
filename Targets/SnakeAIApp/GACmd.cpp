@@ -119,12 +119,13 @@ void GACmd::PlayModel(const std::string & modelFilename)
 
     SnakeGame   snakeGame(boardWidth, boardHeight, rand());
     std::vector<sf::RectangleShape>  boardBlocks(boardWidth * boardHeight);
-    std::for_each(boardBlocks.begin(), boardBlocks.end(),
-                 [&](sf::RectangleShape & shape) {
+
+    std::for_each(boardBlocks.begin(), boardBlocks.end(), [&](sf::RectangleShape & shape)
+    {
         shape.setSize({float(blockWidth), float(blockHeight)});
         shape.setOutlineThickness(2);
         shape.setOutlineColor(sf::Color::Black);
-        });
+    });
 
     sf::Clock  clock;
     float  elapsedTime;
@@ -150,7 +151,6 @@ void GACmd::PlayModel(const std::string & modelFilename)
             // Check if the event is a key pressed event
             if (event.type == sf::Event::KeyPressed)
             {
-                // Check if the pressed key is the space key
                 if (event.key.code == sf::Keyboard::Escape)
                     window.close();
             }
@@ -200,25 +200,13 @@ void GACmd::PlayModel(const std::string & modelFilename)
             {
                 auto & block = boardBlocks[blockIndex];
                 block.setPosition(float(x * blockWidth), float(y * blockHeight));
-                auto boardObj = snakeGame.GetBoardObject(x, y);
-
-                if (boardObj == BoardObjType::kBoardObjSnakeHead)
+                switch (snakeGame.GetBoardObject(x, y))
                 {
-                    block.setFillColor(sf::Color::Yellow);
+                    case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
+                    case BoardObjType::kBoardObjSnakeBody:   block.setFillColor(sf::Color::Green);   break;
+                    case BoardObjType::kBoardObjApple:       block.setFillColor(sf::Color::Red);     break;
+                    default:                                 block.setFillColor(sf::Color::Black);   break;
                 }
-                else if (boardObj == BoardObjType::kBoardObjSnakeBody)
-                {
-                    block.setFillColor(sf::Color::Green);
-                }
-                else if (boardObj == BoardObjType::kBoardObjApple)
-                {
-                    block.setFillColor(sf::Color::Red);
-                }
-                else
-                {
-                    block.setFillColor(sf::Color::Black);
-                }
-
                 blockIndex++;
             }
         }
@@ -233,10 +221,12 @@ void GACmd::PlayModel(const std::string & modelFilename)
         std::string gameStateStr;
         switch (snakeGame.GetGameState())
         {
-            case SnakeGameState::kSnakeGameStateRunning:   gameStateStr = "Running";    break;
-            case SnakeGameState::kSnakeGameStateWon:       gameStateStr = "Won";        break;
-            case SnakeGameState::kSnakeGameStateFailed:    gameStateStr = "Failed";     break;
-            default:                                       gameStateStr = "Invalid";    break;
+            case SnakeGameState::kSnakeGameStateRunning:            gameStateStr = "Running";       break;
+            case SnakeGameState::kSnakeGameStateWon:                gameStateStr = "Won";           break;
+            case SnakeGameState::kSnakeGameStateFailedHitItself:    gameStateStr = "Hit Itself";    break;
+            case SnakeGameState::kSnakeGameStateFailedHitWall:      gameStateStr = "Hit Wall";      break;
+            case SnakeGameState::kSnakeGameStateFailedLongLoop:     gameStateStr = "Long Loop";     break;
+            default:                                                gameStateStr = "Invalid";       break;
         }
 
         text.setString("Delta Time (ms): " + std::to_string(deltaTime*1000) +

@@ -27,7 +27,7 @@ void SnakeGame::Update()
     // more chance to survive.
     if (m_steps > std::size_t(m_boardWidth * m_boardHeight))
     {
-        m_gameState = SnakeGameState::kSnakeGameStateFailed;
+        m_gameState = SnakeGameState::kSnakeGameStateFailedLongLoop;
         return;
     }
 
@@ -55,7 +55,7 @@ void SnakeGame::Update()
     if (newHeadPos.x < 0 || newHeadPos.x >= m_boardWidth ||
         newHeadPos.y < 0 || newHeadPos.y >= m_boardHeight)
     {
-        m_gameState = SnakeGameState::kSnakeGameStateFailed;
+        m_gameState = SnakeGameState::kSnakeGameStateFailedHitWall;
         return;
     }
 
@@ -65,7 +65,7 @@ void SnakeGame::Update()
     if (boardObj == BoardObjType::kBoardObjSnakeHead ||
         boardObj == BoardObjType::kBoardObjSnakeBody)
     {
-        m_gameState = SnakeGameState::kSnakeGameStateFailed;
+        m_gameState = SnakeGameState::kSnakeGameStateFailedHitItself;
         return;
     }
 

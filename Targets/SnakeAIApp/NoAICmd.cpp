@@ -104,12 +104,13 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 
     SnakeGame   snakeGame(boardWidth, boardHeight, rand());
     std::vector<sf::RectangleShape>  boardBlocks(boardWidth * boardHeight);
-    std::for_each(boardBlocks.begin(), boardBlocks.end(),
-                  [&](sf::RectangleShape & shape) {
-                      shape.setSize({float(blockWidth), float(blockHeight)});
-                      shape.setOutlineThickness(2);
-                      shape.setOutlineColor(sf::Color::Black);
-                  });
+
+    std::for_each(boardBlocks.begin(), boardBlocks.end(), [&](sf::RectangleShape & shape)
+    {
+        shape.setSize({float(blockWidth), float(blockHeight)});
+        shape.setOutlineThickness(2);
+        shape.setOutlineColor(sf::Color::Black);
+    });
 
     sf::Clock clock;
     float  elapsedTime = 10;
@@ -137,25 +138,14 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
             {
                 updateGame = true;
                 // Check if the pressed key is the space key
-                if (event.key.code == sf::Keyboard::Escape)
+                switch (event.key.code)
                 {
-                    window.close();
-                }
-                else if (event.key.code == sf::Keyboard::Left)
-                {
-                    snakeGame.SetDirection(SnakeDirection::kSnakeDirLeft);
-                }
-                else if (event.key.code == sf::Keyboard::Right)
-                {
-                    snakeGame.SetDirection(SnakeDirection::kSnakeDirRight);
-                }
-                else if (event.key.code == sf::Keyboard::Up)
-                {
-                    snakeGame.SetDirection(SnakeDirection::kSnakeDirUp);
-                }
-                else if (event.key.code == sf::Keyboard::Down)
-                {
-                    snakeGame.SetDirection(SnakeDirection::kSnakeDirDown);
+                    case sf::Keyboard::Escape:     window.close();                                          break;
+                    case sf::Keyboard::Left:       snakeGame.SetDirection(SnakeDirection::kSnakeDirLeft);   break;
+                    case sf::Keyboard::Right:      snakeGame.SetDirection(SnakeDirection::kSnakeDirRight);  break;
+                    case sf::Keyboard::Up:         snakeGame.SetDirection(SnakeDirection::kSnakeDirUp);     break;
+                    case sf::Keyboard::Down:       snakeGame.SetDirection(SnakeDirection::kSnakeDirDown);   break;
+                    default: break;
                 }
             }
         }
@@ -184,26 +174,13 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
                     auto & block = boardBlocks[blockIndex];
                     block.setSize({float(blockWidth), float(blockHeight)});
                     block.setPosition(float(x*blockWidth), float(y*blockHeight));
-
-                    auto boardObj = snakeGame.GetBoardObject(x, y);
-
-                    if (boardObj == BoardObjType::kBoardObjSnakeHead)
+                    switch (snakeGame.GetBoardObject(x, y))
                     {
-                        block.setFillColor(sf::Color::Yellow);
+                        case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
+                        case BoardObjType::kBoardObjSnakeBody:   block.setFillColor(sf::Color::Green);   break;
+                        case BoardObjType::kBoardObjApple:       block.setFillColor(sf::Color::Red);     break;
+                        default:                                 block.setFillColor(sf::Color::Black);   break;
                     }
-                    else if (boardObj == BoardObjType::kBoardObjSnakeBody)
-                    {
-                        block.setFillColor(sf::Color::Green);
-                    }
-                    else if (boardObj == BoardObjType::kBoardObjApple)
-                    {
-                        block.setFillColor(sf::Color::Red);
-                    }
-                    else
-                    {
-                        block.setFillColor(sf::Color::Black);
-                    }
-
                     blockIndex++;
                 }
             }
@@ -219,18 +196,12 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
         std::string gameStateStr;
         switch (snakeGame.GetGameState())
         {
-            case SnakeGameState::kSnakeGameStateRunning:
-                gameStateStr = "Running";
-                break;
-            case SnakeGameState::kSnakeGameStateWon:
-                gameStateStr = "Won";
-                break;
-            case SnakeGameState::kSnakeGameStateFailed:
-                gameStateStr = "Failed";
-                break;
-            default:
-                gameStateStr = "Invalid";
-                break;
+            case SnakeGameState::kSnakeGameStateRunning:            gameStateStr = "Running";       break;
+            case SnakeGameState::kSnakeGameStateWon:                gameStateStr = "Won";           break;
+            case SnakeGameState::kSnakeGameStateFailedHitItself:    gameStateStr = "Hit Itself";    break;
+            case SnakeGameState::kSnakeGameStateFailedHitWall:      gameStateStr = "Hit Wall";      break;
+            case SnakeGameState::kSnakeGameStateFailedLongLoop:     gameStateStr = "Long Loop";     break;
+            default:                                                gameStateStr = "Invalid";       break;
         }
 
         auto params = snakeGame.GetParameters();

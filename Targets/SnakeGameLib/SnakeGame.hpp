@@ -35,10 +35,12 @@ enum class BoardObjType : int32_t
 
 enum class SnakeGameState : int32_t
 {
-    kSnakeGameStateInvalid    = 0,
-    kSnakeGameStateRunning    = 1,
-    kSnakeGameStateFailed     = 2,
-    kSnakeGameStateWon        = 3,
+    kSnakeGameStateInvalid          = 0,
+    kSnakeGameStateRunning          = 1,
+    kSnakeGameStateFailedHitWall    = 2,
+    kSnakeGameStateFailedHitItself  = 3,
+    kSnakeGameStateFailedLongLoop   = 4,
+    kSnakeGameStateWon              = 5,
 };
 
 struct Position
