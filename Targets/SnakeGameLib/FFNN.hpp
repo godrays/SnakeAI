@@ -9,8 +9,12 @@
 
 #pragma once
 
+// Project includes
+// External includes
 #include <Eigen/Dense>
+// System includes
 #include <random>
+
 
 // Simple multi-layer feed-forward neural network.
 class FFNN

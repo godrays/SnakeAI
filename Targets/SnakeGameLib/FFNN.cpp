@@ -7,8 +7,11 @@
 //  trade secret or copyright law. Dissemination of this information or reproduction of this
 //  material is strictly forbidden unless prior written permission is obtained from Arkin Terli.
 
-#include "FFNN.hpp"
 
+// Project includes
+#include "FFNN.hpp"
+// External includes
+// System includes
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -22,11 +25,11 @@ bool FFNN::Init(const std::vector<int> & layers)
         return false;
     }
 
-    // Create a random number generator.
-    std::random_device  randDevice;
-    std::mt19937        randEngine(randDevice());  // Random Device used to change seed each time.
-    std::normal_distribution<double>  dist(0.0, 1.0);
-    auto randGen = [&randEngine, &dist](){ return dist(randEngine); };
+    auto getRandomNumber = [&](double min, double max)
+    {
+        return min + (max - min) * (static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX));
+    };
+    auto randGen = [&getRandomNumber](){ return getRandomNumber(-1, 1); };
 
     for (size_t i=0; i<layers.size()-1; ++i)
     {
@@ -41,15 +44,25 @@ bool FFNN::Init(const std::vector<int> & layers)
 
 Eigen::MatrixXd FFNN::Forward(const Eigen::MatrixXd & input)
 {
+    [[maybe_unused]] auto sigmoid = [](double x) { return 1.0 / (1.0 + std::exp(-x)); };
+    [[maybe_unused]] auto tanh    = [](double x) { return (std::exp(x) - std::exp(-x)) / (std::exp(x) + std::exp(-x)); };
+    [[maybe_unused]] auto relu    = [](double x) { return std::max<double>(x, 0); };
+
     Eigen::MatrixXd H = input;
     for (size_t i=0; i<m_weights.size(); ++i)
     {
-        H = H * m_weights[i] + m_biases[i];
-        // Apply activation function
-        H = H.unaryExpr([](double x) { return std::tanh(x); });
+        H = H * m_weights[i];// + m_biases[i];
+        // Apply activation function to hidden layers.
+        if (i < m_weights.size()-1)
+            H = H.unaryExpr([&](double x) { return relu(x); });
     }
 
-    return H;
+    // Apply sigmoid to outputs.
+    return H.unaryExpr([&](double x) { return sigmoid(x); });
+    // OPTIONAL: Alternatively, softmax can be applied to outputs.
+    // double sumExp = 0;
+    // H.unaryExpr([&](double x) { sumExp += std::exp(x); return x; });
+    // return H.unaryExpr([&](double x) { return std::exp(x) / sumExp; });
 }
 
 
