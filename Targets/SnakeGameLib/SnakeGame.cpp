@@ -35,20 +35,11 @@ void SnakeGame::Update()
 
     switch (m_direction)
     {
-        case SnakeDirection::kSnakeDirUp:
-            newHeadPos.y--;
-            break;
-        case SnakeDirection::kSnakeDirDown:
-            newHeadPos.y++;
-            break;
-        case SnakeDirection::kSnakeDirLeft:
-            newHeadPos.x--;
-            break;
-        case SnakeDirection::kSnakeDirRight:
-            newHeadPos.x++;
-            break;
-        default:
-            break;
+        case SnakeDirection::kSnakeDirUp:       newHeadPos.y--;     break;
+        case SnakeDirection::kSnakeDirDown:     newHeadPos.y++;     break;
+        case SnakeDirection::kSnakeDirLeft:     newHeadPos.x--;     break;
+        case SnakeDirection::kSnakeDirRight:    newHeadPos.x++;     break;
+        default:                                                    break;
     }
 
     // Check if the snake is in the boundary conditions
@@ -128,15 +119,11 @@ std::vector<double> SnakeGame::GetParameters()
 
     Position snakeHeadPos = m_snake.front();
 
-    // Distance from snake's head to boarder of the game boards. (8 parameters)
+    // Distance from snake's head to boarder of the game boards. (4 parameters)
     double N = snakeHeadPos.y;
     double S = m_boardHeight - 1 - snakeHeadPos.y;
     double W = snakeHeadPos.x;
     double E = m_boardWidth - 1 - snakeHeadPos.x;
-    double NW = GetDistance(snakeHeadPos, -1, -1, false);
-    double NE = GetDistance(snakeHeadPos,  1, -1, false);
-    double SW = GetDistance(snakeHeadPos, -1,  1, false);
-    double SE = GetDistance(snakeHeadPos,  1,  1, false);
 
     // Distance from snake's head to either snake's body or game board borders. (8 parameters)
     double sN = GetDistance(snakeHeadPos,  0, -1, true);
@@ -169,19 +156,16 @@ std::vector<double> SnakeGame::GetParameters()
         default: break;
     }
 
-    // Distance to apple. (1 parameter)
-    double appleDist = GetDistanceToApple();
+    double bW = m_boardWidth;
+    double bH = m_boardHeight;
+    double bD = std::sqrt(bW*bW + bH*bH);
 
-    // Size of snake.  (1 parameter)
-    double snakeSize = m_snake.size();
-
+    // Add normalized parameters.
     params = {
-        N, S, W, E, NW, NE, SW, SE,
-        sN, sS, sW, sE, sNW, sNE, sSW, sSE,
-        aN, aS, aW, aE,
-        snakesDirUp, snakesDirDown, snakesDirLeft, snakesDirRight,
-        appleDist,
-        snakeSize,
+        N/bH, S/bH, W/bW, E/bW,                                     // Normalized snakes' distances to walls.
+        snakesDirUp, snakesDirDown, snakesDirLeft, snakesDirRight,  // Snakes direction (1 dir is active at a time)
+        sN/bH, sS/bH, sW/bW, sE/bW, sNW/bD, sNE/bD, sSW/bD, sSE/bD, // Normalized snakes' distance to body or walls.
+        aN, aS, aW, aE,                                             // Apple's direction relative to snakes' head.
     };
 
     if (params.size() != m_parameterSize)
@@ -195,8 +179,8 @@ std::vector<double> SnakeGame::GetParameters()
 
 int64_t SnakeGame::GetRandomNumber(int64_t min, int64_t max)
 {
-    // EXTREMELY IMPORTANT: Each game must have it's own random number sequence.
-    //std::default_random_engine rndEng(m_seed);
+    // EXTREMELY IMPORTANT: Each game must have its own random number sequence.
+    // std::default_random_engine rndEng(m_seed);
     std::uniform_int_distribution<int>  dist(min, max);
     return dist(m_rndEng);
 }

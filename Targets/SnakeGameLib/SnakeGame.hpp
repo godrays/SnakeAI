@@ -162,5 +162,5 @@ private:
     int m_score;
     std::size_t  m_steps;
     std::mt19937_64   m_rndEng;
-    static const std::size_t  m_parameterSize{26};
+    static const std::size_t  m_parameterSize{20};
 };

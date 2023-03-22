@@ -247,17 +247,17 @@ void GACmd::TrainModel(const std::string & modelFilename)
 
     // First determine genetic material size.
     int modelInputSize = static_cast<int>(SnakeGame::GetParameterSize());
-    std::vector<int>  ffnnLayers{modelInputSize, modelInputSize/2, modelInputSize/3, modelInputSize/4, 4};
+    std::vector<int>  ffnnLayers{modelInputSize, modelInputSize, modelInputSize/2, 4};
     FFNN  dummyNet;
     dummyNet.Init(ffnnLayers);
     auto geneticMaterialSize = dummyNet.SerializeAllParameters().size();
 
-    const std::size_t  populationSize    = 20000;
-    const std::size_t  parentRatio       = 50;
-    const std::size_t  mutateProbability = 5;
-    const std::size_t  transferRatio     = 20;
-    const std::size_t  crossover         = 50;
-    const std::size_t  samplingSize      = 1;    // Game sampling size per individual per generation.
+    const std::size_t  populationSize    = 50;
+    const std::size_t  parentRatio       = 50;      // Percent
+    const std::size_t  mutateProbability = 1;       // Percent
+    const std::size_t  transferRatio     = 10;      // Percent
+    const std::size_t  crossover         = 50;      // Percent
+    const std::size_t  samplingSize      = 2000;    // Game sampling size per individual per generation.
 
     ga::GeneticAlgorithm<double>  ga(populationSize, parentRatio, mutateProbability, transferRatio, crossover,
                                      geneticMaterialSize);
@@ -299,13 +299,13 @@ void GACmd::TrainModel(const std::string & modelFilename)
 
         auto valueVec = ga.GetBestIndividual().GetValue();
         auto fitness = ga.GetBestIndividual().GetFitness();
-        std::cout << ga.GetGeneration() << ". Fitness: " << fitness << "\r";
+        std::cout << "Generation: " << ga.GetGeneration() << "  Fitness: " << fitness << "\r";
         ga.CreateNextPopulation();
     }
 
     auto valueVec = ga.GetBestIndividual().GetValue();
     auto fitness = ga.GetBestIndividual().GetFitness();
-    std::cout << ga.GetGeneration() << ". Fitness: " << fitness << std::endl;
+    std::cout << "Generation: " << ga.GetGeneration() << "  Fitness: " << fitness << std::endl;
 }
 
 
@@ -324,10 +324,10 @@ double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<dou
     // Create a new snake game.
     SnakeGame snakeGame(gameBoardWidth, gameBoardHeight, rndSeed);
 
-    std::size_t numOfUpdates = 0;
-    double avgDistanceToApple = 0;
-    double prevDistToApple = -1;
-    double moveToAppleScore = 0;    // Increments everytime snake gets closer to apple, otherwise it's decreased.
+    double highestScore = 0;
+    double avgDeaths = 0;
+    double avgSteps = 0;
+    double avgLongLoopFails = 0;
 
     // Run the same model N times to assess quality of the individual (chromosome/array of genes/NN Model weights).
     for (std::size_t i=0; i<samplingSize; ++i)
@@ -349,34 +349,32 @@ double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<dou
             if (maxValue < outputs(0, 3)) { newDir = SnakeDirection::kSnakeDirRight; }
             snakeGame.SetDirection(newDir);
 
-            avgDistanceToApple += snakeGame.GetDistanceToApple();
-
             // Update game.
             snakeGame.Update();
-
-            // More updates gives an individual to survive longer.
-            numOfUpdates++;
-            // Calculate move to apple score.
-            if (prevDistToApple >= 0)
-                moveToAppleScore += snakeGame.GetDistanceToApple() <= prevDistToApple ? 1 : -1;
-            prevDistToApple = snakeGame.GetDistanceToApple();
         }
 
-        if (snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateWon)
+        if (snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateFailedHitWall ||
+            snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateFailedHitItself)
         {
-            std::cout << "AI Won The Game!" << std::endl;
+            avgDeaths++;
         }
+        if (snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateFailedLongLoop)
+        {
+            avgLongLoopFails++;
+        }
+
+        highestScore = std::max<double>(highestScore, snakeGame.GetScore());
+        avgSteps += snakeGame.GetSteps();
 
         snakeGame.Reset();
     }
 
-    // Now game stopped here. We need to calculate fitness value to tell the genetic algorithm that how well
-    // the neural network has played the game so far. Fitness value calculate is very important.
-    double score = snakeGame.GetScore();
-    double patrollingPenalty = snakeGame.GetSteps() >= gameBoardWidth * gameBoardHeight ? 1 : 0;
-    return score*20 + numOfUpdates*1 + moveToAppleScore*10 - patrollingPenalty*5 - (avgDistanceToApple/numOfUpdates)*5;
-    //return std::pow(score+1,3) * moveToAppleScore*10 - 100*(avgDistanceToApple/numOfUpdates);
-    //return numOfUpdates + (std::pow(2,score) + std::pow(score, 2.1) * 500) - (std::pow(score, 2.1) * std::pow(0.25*numOfUpdates, 1.3));
+    // Calculate fitness value to tell the genetic algorithm how well the neural network has played the game so far.
+    // Fitness formula is very important.
+    avgSteps /= double(samplingSize);
+    avgDeaths /= double(samplingSize);
+    avgLongLoopFails /= double(samplingSize);
+    return highestScore * 500 - avgDeaths * 15 - avgSteps * 10 - avgLongLoopFails * 100;
 }
 
 } // namespace sai

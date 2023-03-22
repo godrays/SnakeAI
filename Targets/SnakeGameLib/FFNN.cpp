@@ -51,10 +51,10 @@ Eigen::MatrixXd FFNN::Forward(const Eigen::MatrixXd & input)
     Eigen::MatrixXd H = input;
     for (size_t i=0; i<m_weights.size(); ++i)
     {
-        H = H * m_weights[i];// + m_biases[i];
+        H = H * m_weights[i] + m_biases[i];
         // Apply activation function to hidden layers.
         if (i < m_weights.size()-1)
-            H = H.unaryExpr([&](double x) { return relu(x); });
+            H = H.unaryExpr([&](double x) { return tanh(x); });
     }
 
     // Apply sigmoid to outputs.
