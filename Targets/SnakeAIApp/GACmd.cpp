@@ -100,39 +100,43 @@ void GACmd::PlayModel(const std::string & modelFilename)
 
     int windowWidth  = 500;
     int windowHeight = 500;
+    m_blockWidth  = 50;
+    m_blockHeight = 50;
+    m_boardWidth  = windowWidth / m_blockWidth;
+    m_boardHeight = windowHeight / m_blockHeight;
 
     // Create a window with a resolution of 800x600 and a title
     sf::RenderWindow   window(sf::VideoMode(windowWidth, windowHeight), "Snake AI Model Play Mode");
     window.setFramerateLimit(60);
 
+    // Create font
     sf::Font font;
     font.loadFromMemory(FontSFNSMono, sizeof(FontSFNSMono));
 
+    // Create a text to render on window.
     sf::Text text("", font, 10);
     text.setPosition(10, 10);
     text.setFillColor(sf::Color::White);
 
-    int blockWidth  = 50;
-    int blockHeight = 50;
+    // Create a snake game to simulate each step.
+    SnakeGame   snakeGame(m_boardWidth, m_boardHeight, rand());
 
-    int boardWidth  = windowWidth  / blockWidth;
-    int boardHeight = windowHeight / blockHeight;
+    // Create neural network to determine snakes next steps.
+    FFNN  ffnn;
+    ffnn.Load(modelFilename);
 
-    SnakeGame   snakeGame(boardWidth, boardHeight, rand());
-    std::vector<sf::RectangleShape>  boardBlocks(boardWidth * boardHeight);
-
+    // Create block to render on windows. Update initial values.
+    std::vector<sf::RectangleShape>  boardBlocks(m_boardWidth * m_boardHeight);
     std::for_each(boardBlocks.begin(), boardBlocks.end(), [&](sf::RectangleShape & shape)
     {
-        shape.setSize({float(blockWidth), float(blockHeight)});
+        shape.setSize({float(m_blockWidth), float(m_blockHeight)});
         shape.setOutlineThickness(2);
         shape.setOutlineColor(sf::Color::Black);
     });
 
     sf::Clock  clock;
     float  elapsedTime;
-
-    FFNN  ffnn;
-    ffnn.Load(modelFilename);
+    float  elapsedTimeMax = 0.07;
 
     // Main loop
     while (window.isOpen())
@@ -158,83 +162,93 @@ void GACmd::PlayModel(const std::string & modelFilename)
 
         // Call game update only every one second to slow down the snake movement.
         elapsedTime += deltaTime;
-        if (elapsedTime > 0.07)
+        if (elapsedTime > elapsedTimeMax)
         {
+            CalculateGameNextStep(snakeGame, ffnn, boardBlocks);
             elapsedTime = 0;
-
-            // Get game parameters to use as inputs to neural network model.
-            auto modelInputs = snakeGame.GetParameters();
-            auto inputs = Eigen::Map<Eigen::RowVectorXd>(modelInputs.data(), modelInputs.size());
-
-            // Make prediction and get new snake directions as model outputs.
-            auto outputs = ffnn.Forward(inputs);
-
-            // Determine the best direction from model outputs. The highest value should be the new direction.
-            SnakeDirection newDir = SnakeDirection::kSnakeDirUp;
-            double maxValue = outputs(0, 0);
-            if (maxValue < outputs(0, 1)) { newDir = SnakeDirection::kSnakeDirDown; maxValue = outputs(0, 1); }
-            if (maxValue < outputs(0, 2)) { newDir = SnakeDirection::kSnakeDirLeft; maxValue = outputs(0, 2); }
-            if (maxValue < outputs(0, 3)) { newDir = SnakeDirection::kSnakeDirRight; }
-            snakeGame.SetDirection(newDir);
-
-            // Update game.
-            snakeGame.Update();
-
-            if (snakeGame.GetGameState() != SnakeGameState::kSnakeGameStateRunning)
-            {
-                snakeGame.Reset();
-                continue;
-            }
-
-            // Prepare game board to Render.
-            int blockIndex = 0;
-
-            // Render game board.
-            for (int y=0; y<boardHeight; ++y)
-            {
-                for (int x=0; x<boardWidth; ++x)
-                {
-                    auto & block = boardBlocks[blockIndex];
-                    block.setPosition(float(x * blockWidth), float(y * blockHeight));
-                    switch (snakeGame.GetBoardObject(x, y))
-                    {
-                        case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
-                        case BoardObjType::kBoardObjSnakeBody:   block.setFillColor(sf::Color::Green);   break;
-                        case BoardObjType::kBoardObjApple:       block.setFillColor(sf::Color::Red);     break;
-                        default:                                 block.setFillColor(sf::Color::Black);   break;
-                    }
-                    blockIndex++;
-                }
-            }
         }
 
-        // Clear the window with a black color
-        window.clear(sf::Color::Black);
-
-        // Draw the board.
-        for (auto block : boardBlocks)
-        {
-            window.draw(block);
-        }
-
-        // Draw text
-        std::string gameStateStr;
-        switch (snakeGame.GetGameState())
-        {
-            case SnakeGameState::kSnakeGameStateRunning:            gameStateStr = "Running";       break;
-            case SnakeGameState::kSnakeGameStateWon:                gameStateStr = "Won";           break;
-            case SnakeGameState::kSnakeGameStateFailedHitItself:    gameStateStr = "Hit Itself";    break;
-            case SnakeGameState::kSnakeGameStateFailedHitWall:      gameStateStr = "Hit Wall";      break;
-            case SnakeGameState::kSnakeGameStateFailedLongLoop:     gameStateStr = "Long Loop";     break;
-            default:                                                gameStateStr = "Invalid";       break;
-        }
-
-        text.setString("Score: " + std::to_string(snakeGame.GetScore()));
-        window.draw(text);
-
-        // Display the window content on the screen
-        window.display();
+        DrawGameBoard(window, text, snakeGame, boardBlocks);
     }
+}
+
+
+void GACmd::CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn, std::vector<sf::RectangleShape>& boardBlocks) const
+{
+    // Get game parameters to use as inputs to neural network model.
+    auto modelInputs = snakeGame.GetParameters();
+    auto inputs = Eigen::Map<Eigen::RowVectorXd>(modelInputs.data(), modelInputs.size());
+
+    // Make prediction and get new snake directions as model outputs.
+    auto outputs = ffnn.Forward(inputs);
+
+    // Determine the best direction from model outputs. The highest value should be the new direction.
+    SnakeDirection newDir = SnakeDirection::kSnakeDirUp;
+    double maxValue = outputs(0, 0);
+    if (maxValue < outputs(0, 1)) { newDir = SnakeDirection::kSnakeDirDown; maxValue = outputs(0, 1); }
+    if (maxValue < outputs(0, 2)) { newDir = SnakeDirection::kSnakeDirLeft; maxValue = outputs(0, 2); }
+    if (maxValue < outputs(0, 3)) { newDir = SnakeDirection::kSnakeDirRight; }
+    snakeGame.SetDirection(newDir);
+
+    // Update game.
+    snakeGame.Update();
+
+    // Prepare game board to Render.
+    if (snakeGame.GetGameState() != SnakeGameState::kSnakeGameStateRunning)
+    {
+        snakeGame.Reset();
+    }
+
+    // Update game board block colors to reflect the changes.
+    int blockIndex = 0;
+    for (int y=0; y < m_boardHeight; ++y)
+    {
+        for (int x=0; x < m_boardWidth; ++x)
+        {
+            auto & block = boardBlocks[blockIndex];
+            block.setPosition(float(x * m_blockWidth), float(y * m_blockHeight));
+            switch (snakeGame.GetBoardObject(x, y))
+            {
+                case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
+                case BoardObjType::kBoardObjSnakeBody:   block.setFillColor(sf::Color::Green);   break;
+                case BoardObjType::kBoardObjApple:       block.setFillColor(sf::Color::Red);     break;
+                default:                                 block.setFillColor(sf::Color::Black);   break;
+            }
+            blockIndex++;
+        }
+    }
+}
+
+
+void GACmd::DrawGameBoard(sf::RenderWindow& window, sf::Text& text, SnakeGame& snakeGame,
+                          std::vector<sf::RectangleShape>& boardBlocks) const
+{
+    // Clear the window with a black color
+    window.clear(sf::Color::Black);
+
+    // Draw the board.
+    for (auto block : boardBlocks)
+    {
+        window.draw(block);
+    }
+
+    // Draw text
+    std::string gameStateStr;
+    switch (snakeGame.GetGameState())
+    {
+        case SnakeGameState::kSnakeGameStateRunning:            gameStateStr = "Running";       break;
+        case SnakeGameState::kSnakeGameStateWon:                gameStateStr = "Won";           break;
+        case SnakeGameState::kSnakeGameStateFailedHitItself:    gameStateStr = "Hit Itself";    break;
+        case SnakeGameState::kSnakeGameStateFailedHitWall:      gameStateStr = "Hit Wall";      break;
+        case SnakeGameState::kSnakeGameStateFailedLongLoop:     gameStateStr = "Long Loop";     break;
+        default:                                                gameStateStr = "Invalid";       break;
+    }
+
+    text.setString("Score: " + std::to_string(snakeGame.GetScore()));
+    window.draw(text);
+
+    // Display the window content on the screen
+    window.display();
 }
 
 

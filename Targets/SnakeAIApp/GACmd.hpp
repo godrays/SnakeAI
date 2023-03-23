@@ -11,6 +11,9 @@
 
 // Project includes
 #include "BaseCmd.hpp"
+#include "SFML/Graphics.hpp"
+#include "SnakeGame.hpp"
+#include "FFNN.hpp"
 // External includes
 #include <docopt/docopt.h>
 // System includes
@@ -42,6 +45,19 @@ protected:
     void TrainModel(const std::string & modelFilename);
     double SimulateSnakeGames(std::size_t samplingSize, const std::vector<double> & value,
                               const std::vector<int> & ffnnLayers, int rndSeed);
+
+    // Calculates game's next step.
+    void CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn, std::vector<sf::RectangleShape>& boardBlocks) const;
+
+    // Draws game board.
+    void DrawGameBoard(sf::RenderWindow& window, sf::Text& text, SnakeGame& snakeGame,
+                       std::vector<sf::RectangleShape>& boardBlocks) const;
+
+private:
+    int m_boardWidth{0};
+    int m_boardHeight{0};
+    int m_blockWidth{0};
+    int m_blockHeight{0};
 };
 
 }
