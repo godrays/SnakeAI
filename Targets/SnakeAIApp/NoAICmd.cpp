@@ -27,12 +27,15 @@ void NoAICmd::Run(int argc, const char *argv[])
     static const char USAGE[] =
     R"(
     Usage:
-        SnakeAIApp noai [usestep]
+        SnakeAIApp noai [--usestep]
 
     Options:
 
-        usestep               Update game per keypress only.
+        --bw=<number>           Board width in block units.  [Default: 10]
+        --bh=<number>           Board height in block units. [Default: 10]
+        --bls=<number>          Block size in pixel units.   [Default: 25]
 
+        --usestep               Update game per keypress only.
     )";
 
     std::map <std::string, docopt::value> args;
@@ -68,9 +71,25 @@ bool NoAICmd::ValidateArguments(std::map <std::string, docopt::value> &args, con
         return false;
     }
 
+    auto CheckRangeLong = [&](const std::string& paramName, int min, int max) -> bool
+    {
+        if (args[paramName] && (args[paramName].asLong() < min || args[paramName].asLong() > max))
+        {
+            std::cout << "Invalid parameter range: " << paramName
+                      << " must be in [" << min << "," << max << "]" << std::endl;
+            return false;
+        }
+        return true;
+    };
+
     // VALIDATE REQUIRED ARGUMENTS
 
-    // TODO: Validate the rest of the cmd-line parameters values here.
+    if (!CheckRangeLong("--bw",  10, 100) ||
+        !CheckRangeLong("--bh",  10, 100) ||
+        !CheckRangeLong("--bls", 10, 100))
+    {
+        return false;
+    }
 
     return true;
 }
@@ -78,16 +97,21 @@ bool NoAICmd::ValidateArguments(std::map <std::string, docopt::value> &args, con
 
 void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 {
-    std::srand(std::time(nullptr));
+    std::random_device rndDev;
+    int rndSeed = static_cast<int>(rndDev());
 
-    bool useStep = args["usestep"].asBool();
+    // Override parameters here
+    if (args["--bw"])  m_boardWidth  = args["--bw"].asLong();
+    if (args["--bh"])  m_boardHeight = args["--bh"].asLong();
+    if (args["--bls"]) m_blockSize   = args["--bls"].asLong();
+    bool useStep = args["--usestep"].asBool();
 
-    int windowWidth  = 500;
-    int windowHeight = 500;
+    int windowWidth  = m_boardWidth  * m_blockSize;
+    int windowHeight = m_boardHeight * m_blockSize;
 
-    // Create a window with a resolution of 800x600 and a title
-    sf::RenderWindow   window(sf::VideoMode(windowWidth, windowHeight), "Snake - No AI");
-    window.setFramerateLimit(60);
+    // Create a window with a title
+    m_window.create(sf::VideoMode(windowWidth, windowHeight), "Snake AI - Manual");
+    m_window.setFramerateLimit(60);
 
     sf::Font font;
     font.loadFromMemory(FontSFNSMono, sizeof(FontSFNSMono));
@@ -96,18 +120,12 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
     text.setPosition(10, 10);
     text.setFillColor(sf::Color::White);
 
-    int blockWidth  = 50;
-    int blockHeight = 50;
+    SnakeGame   snakeGame(m_boardWidth, m_boardHeight, rndSeed);
+    m_boardBlocks.resize(m_boardWidth * m_boardHeight);
 
-    int boardWidth  = windowWidth  / blockWidth;
-    int boardHeight = windowHeight / blockHeight;
-
-    SnakeGame   snakeGame(boardWidth, boardHeight, rand());
-    std::vector<sf::RectangleShape>  boardBlocks(boardWidth * boardHeight);
-
-    std::for_each(boardBlocks.begin(), boardBlocks.end(), [&](sf::RectangleShape & shape)
+    std::for_each(m_boardBlocks.begin(), m_boardBlocks.end(), [&](sf::RectangleShape & shape)
     {
-        shape.setSize({float(blockWidth), float(blockHeight)});
+        shape.setSize({float(m_blockSize), float(m_blockSize)});
         shape.setOutlineThickness(2);
         shape.setOutlineColor(sf::Color::Black);
     });
@@ -116,7 +134,7 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
     float  elapsedTime = 10;
 
     // Main loop
-    while (window.isOpen())
+    while (m_window.isOpen())
     {
         bool updateGame = !useStep;
 
@@ -125,12 +143,12 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 
         // Process events
         sf::Event event{};
-        while (window.pollEvent(event))
+        while (m_window.pollEvent(event))
         {
             // Close the window when the user clicks the close button
             if (event.type == sf::Event::Closed)
             {
-                window.close();
+                m_window.close();
             }
 
             // Check if the event is a key pressed event
@@ -140,7 +158,7 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
                 // Check if the pressed key is the space key
                 switch (event.key.code)
                 {
-                    case sf::Keyboard::Escape:     window.close();                                          break;
+                    case sf::Keyboard::Escape:     m_window.close();                                        break;
                     case sf::Keyboard::Left:       snakeGame.SetDirection(SnakeDirection::kSnakeDirLeft);   break;
                     case sf::Keyboard::Right:      snakeGame.SetDirection(SnakeDirection::kSnakeDirRight);  break;
                     case sf::Keyboard::Up:         snakeGame.SetDirection(SnakeDirection::kSnakeDirUp);     break;
@@ -150,11 +168,10 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
             }
         }
 
-        // Clear the window with a black color
-        window.clear(sf::Color::Black);
+        elapsedTime += deltaTime;
 
         // Call game update only every one second to slow down the snake movement.
-        if (elapsedTime == 10 || (elapsedTime > 0.25 && updateGame))
+        if (elapsedTime >= 10 || (elapsedTime > 0.25 && updateGame))
         {
             snakeGame.Update();
             if (snakeGame.GetGameState() != SnakeGameState::kSnakeGameStateRunning)
@@ -162,59 +179,55 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
                 snakeGame.Reset();
             }
 
+            UpdateGameBoardsDrawableBlocks(snakeGame);
+
             elapsedTime = 0;
-
-            int blockIndex = 0;
-
-            // Render game board.
-            for (int y=0; y<boardHeight; ++y)
-            {
-                for (int x=0; x<boardWidth; ++x)
-                {
-                    auto & block = boardBlocks[blockIndex];
-                    block.setSize({float(blockWidth), float(blockHeight)});
-                    block.setPosition(float(x*blockWidth), float(y*blockHeight));
-                    switch (snakeGame.GetBoardObject(x, y))
-                    {
-                        case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
-                        case BoardObjType::kBoardObjSnakeBody:   block.setFillColor(sf::Color::Green);   break;
-                        case BoardObjType::kBoardObjApple:       block.setFillColor(sf::Color::Red);     break;
-                        default:                                 block.setFillColor(sf::Color::Black);   break;
-                    }
-                    blockIndex++;
-                }
-            }
         }
 
-        // Draw the board.
-        for (auto & block : boardBlocks)
-        {
-            window.draw(block);
-        }
-
-        // Draw text
-        std::string gameStateStr;
-        switch (snakeGame.GetGameState())
-        {
-            case SnakeGameState::kSnakeGameStateRunning:            gameStateStr = "Running";       break;
-            case SnakeGameState::kSnakeGameStateWon:                gameStateStr = "Won";           break;
-            case SnakeGameState::kSnakeGameStateFailedHitItself:    gameStateStr = "Hit Itself";    break;
-            case SnakeGameState::kSnakeGameStateFailedHitWall:      gameStateStr = "Hit Wall";      break;
-            case SnakeGameState::kSnakeGameStateFailedLongLoop:     gameStateStr = "Long Loop";     break;
-            default:                                                gameStateStr = "Invalid";       break;
-        }
-
-        auto params = snakeGame.GetParameters();
-        text.setString("Delta Time (ms): " + std::to_string(deltaTime*1000) +
-                       "\nGame State: " + gameStateStr +
-                       "\nGame Score: " + std::to_string(snakeGame.GetScore()*100));
-        window.draw(text);
-
-        // Display the window content on the screen
-        window.display();
-
-        elapsedTime += deltaTime;
+        text.setString("Score: " + std::to_string(snakeGame.GetScore()));
+        DrawGameBoard(text);
     }
+}
+
+
+void NoAICmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
+{
+    // Update game board block colors to reflect the changes.
+    int blockIndex = 0;
+    for (int y=0; y < m_boardHeight; ++y)
+    {
+        for (int x=0; x < m_boardWidth; ++x)
+        {
+            auto & block = m_boardBlocks[blockIndex];
+            block.setPosition(float(x * m_blockSize), float(y * m_blockSize));
+            switch (snakeGame.GetBoardObject(x, y))
+            {
+                case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
+                case BoardObjType::kBoardObjSnakeBody:   block.setFillColor(sf::Color::Green);   break;
+                case BoardObjType::kBoardObjApple:       block.setFillColor(sf::Color::Red);     break;
+                default:                                 block.setFillColor(sf::Color::Black);   break;
+            }
+            blockIndex++;
+        }
+    }
+}
+
+
+void NoAICmd::DrawGameBoard(sf::Text& text)
+{
+    // Clear the window with a black color
+    m_window.clear(sf::Color::Black);
+
+    // Draw the board.
+    for (const auto & block : m_boardBlocks)
+    {
+        m_window.draw(block);
+    }
+
+    m_window.draw(text);
+
+    // Display the window content on the screen
+    m_window.display();
 }
 
 } // namespace sai

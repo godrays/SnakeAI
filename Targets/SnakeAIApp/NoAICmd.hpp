@@ -11,8 +11,10 @@
 
 // Project includes
 #include "BaseCmd.hpp"
+#include "SnakeGame.hpp"
 // External includes
 #include <docopt/docopt.h>
+#include <SFML/Graphics.hpp>
 // System includes
 #include <map>
 
@@ -37,6 +39,20 @@ protected:
 
     // Executes the command based on the given commandline parameter options.
     void ExecuteCommand(std::map<std::string, docopt::value> & args);
+
+    // Draws game board.
+    void DrawGameBoard(sf::Text& text);
+
+    // Updates position of the drawable game board blocks.
+    void UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame);
+
+private:
+    int m_boardWidth{10};
+    int m_boardHeight{10};
+    int m_blockSize{25};
+
+    sf::RenderWindow   m_window;
+    std::vector<sf::RectangleShape>  m_boardBlocks;
 };
 
 }
