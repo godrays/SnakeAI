@@ -50,7 +50,7 @@ protected:
     void CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn) const;
 
     // Draws game board.
-    void DrawGameBoard(sf::RenderWindow& window, sf::Text& text, SnakeGame& snakeGame) const;
+    void DrawGameBoard(sf::Text& text, SnakeGame& snakeGame);
 
     // Determine direction of the snake from ML model outputs.
     SnakeDirection DetermineSnakeDirection(const Eigen::MatrixXd& outputs) const;
@@ -63,6 +63,7 @@ private:
     int m_boardHeight{10};
     int m_blockSize{25};
 
+    sf::RenderWindow   m_window;
     std::vector<sf::RectangleShape>  m_boardBlocks;
 };
 

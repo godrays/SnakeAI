@@ -20,6 +20,7 @@
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <vector>
 
 
@@ -127,14 +128,15 @@ void GACmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 
 void GACmd::PlayModel(const std::string & modelFilename)
 {
-    std::srand(std::time(nullptr));
+    std::random_device rndDev;
+    int rndSeed = static_cast<int>(rndDev());
 
     int windowWidth  = m_boardWidth  * m_blockSize;
     int windowHeight = m_boardHeight * m_blockSize;
 
     // Create a window with a resolution of 800x600 and a title
-    sf::RenderWindow   window(sf::VideoMode(windowWidth, windowHeight), "Snake AI Model Play Mode");
-    window.setFramerateLimit(60);
+    m_window.create(sf::VideoMode(windowWidth, windowHeight), "Snake AI Model Play Mode");
+    m_window.setFramerateLimit(60);
 
     // Create font
     sf::Font font;
@@ -146,7 +148,7 @@ void GACmd::PlayModel(const std::string & modelFilename)
     text.setFillColor(sf::Color::White);
 
     // Create a snake game to simulate each step.
-    SnakeGame   snakeGame(m_boardWidth, m_boardHeight, rand());
+    SnakeGame   snakeGame(m_boardWidth, m_boardHeight, rndSeed);
 
     // Create neural network to determine snakes next steps.
     FFNN  ffnn;
@@ -166,24 +168,24 @@ void GACmd::PlayModel(const std::string & modelFilename)
     float  elapsedTimeMax = 0.07;
 
     // Main loop
-    while (window.isOpen())
+    while (m_window.isOpen())
     {
         // Time elapsed between two frames.
         float deltaTime = clock.restart().asSeconds();
 
         // Process events
         sf::Event event{};
-        while (window.pollEvent(event))
+        while (m_window.pollEvent(event))
         {
             // Close the window when the user clicks the close button
             if (event.type == sf::Event::Closed)
-                window.close();
+                m_window.close();
 
             // Check if the event is a key pressed event
             if (event.type == sf::Event::KeyPressed)
             {
                 if (event.key.code == sf::Keyboard::Escape)
-                    window.close();
+                    m_window.close();
             }
             else if (event.type == sf::Event::KeyReleased)
             {
@@ -202,15 +204,16 @@ void GACmd::PlayModel(const std::string & modelFilename)
             elapsedTime = 0;
         }
 
-        DrawGameBoard(window, text, snakeGame);
+        DrawGameBoard(text, snakeGame);
     }
 }
 
 
 void GACmd::TrainModel(const std::string & modelFilename)
 {
-    std::srand(std::time(nullptr));
-    int rndSeed = std::rand();
+    std::random_device rndDev;
+    std::mt19937 rndEngine(rndDev());
+    int rndSeed = static_cast<int>(rndDev());
 
     // First determine genetic vector size.
     int modelInputSize = static_cast<int>(SnakeGame::GetParameterSize());
@@ -225,51 +228,49 @@ void GACmd::TrainModel(const std::string & modelFilename)
     const std::size_t  crossover         = 50;      // Percent
     const std::size_t  samplingSize      = 2000;    // Game sampling size per individual per generation.
 
+    // Create genetic algorithm to search best weights and biases for a neural network.
     ga::GeneticAlgorithm<double>  ga(populationSize, parentRatio, mutateProbability, transferRatio, crossover,
                                      geneticVectorSize);
 
     // This method will calculate fitness value for each individual.
     ga.SetFitnessFunc([&](const std::vector<double> & chromosome) -> double
     {
-        double fitness = SimulateSnakeGames(samplingSize, chromosome, ffnnLayers, rndSeed);
-        return fitness;
+        return SimulateSnakeGames(samplingSize, chromosome, ffnnLayers, rndSeed);
     });
 
     // This method will generate random item (genes) for a genetic vector/material (chromosome).
-    ga.SetRandomItemFunc([]() -> double
+    ga.SetRandomItemFunc([&]() -> double
     {
-        double min = -1;
-        double max =  1;
         // Scale the random fraction to the desired range [min, max]
-        return min + (max - min) * (static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX));
+        constexpr double min = -1;
+        constexpr double max =  1;
+        std::uniform_real_distribution<>  dist(min, max);
+        return dist(rndEngine);
     });
 
     ga.CreateInitialPopulation();
 
     std::size_t maxGeneration = 50000;
-    double bestFitness = 0;
+    double bestFitness = -std::numeric_limits<double>::max();
 
     while (ga.GetGeneration() < maxGeneration)
     {
+        double fitness = ga.GetBestIndividual().GetFitness();
+
         // Save the best individual.
-        if (ga.GetBestIndividual().GetFitness() > bestFitness)
+        if (fitness > bestFitness)
         {
-            bestFitness = ga.GetBestIndividual().GetFitness();
             FFNN  ffnn(ffnnLayers);
             // Set genes vector (weights and biases) coming from genetic algorithm.
             ffnn.DeserializeAllParameters(ga.GetBestIndividual().GetValue());
             ffnn.Save(modelFilename);
+
+            bestFitness = fitness;
         }
 
-        auto valueVec = ga.GetBestIndividual().GetValue();
-        auto fitness = ga.GetBestIndividual().GetFitness();
-        std::cout << "Generation: " << ga.GetGeneration() << "  Fitness: " << fitness << "\r";
+        std::cout << "Generation: " << ga.GetGeneration() << "  Fitness: " << bestFitness << "\r";
         ga.CreateNextPopulation();
     }
-
-    auto valueVec = ga.GetBestIndividual().GetValue();
-    auto fitness = ga.GetBestIndividual().GetFitness();
-    std::cout << "Generation: " << ga.GetGeneration() << "  Fitness: " << fitness << std::endl;
 }
 
 
@@ -319,22 +320,22 @@ void GACmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
 }
 
 
-void GACmd::DrawGameBoard(sf::RenderWindow& window, sf::Text& text, SnakeGame& snakeGame) const
+void GACmd::DrawGameBoard(sf::Text& text, SnakeGame& snakeGame)
 {
     // Clear the window with a black color
-    window.clear(sf::Color::Black);
+    m_window.clear(sf::Color::Black);
 
     // Draw the board.
     for (const auto & block : m_boardBlocks)
     {
-        window.draw(block);
+        m_window.draw(block);
     }
 
     text.setString("Score: " + std::to_string(snakeGame.GetScore()));
-    window.draw(text);
+    m_window.draw(text);
 
     // Display the window content on the screen
-    window.display();
+    m_window.display();
 }
 
 
@@ -391,12 +392,13 @@ double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<dou
         snakeGame.Reset();
     }
 
-    // Calculate fitness value to tell the genetic algorithm how well the neural network has played the game so far.
+    // Return fitness value to tell the genetic algorithm how well the neural network has played the game so far.
     // Fitness formula is very important.
     avgSteps /= double(samplingSize);
     avgDeaths /= double(samplingSize);
     avgLongLoopFails /= double(samplingSize);
     avgScore /= double(samplingSize);
+
     return highestScore * 500 + avgScore * 50 - avgDeaths * 15 - avgSteps * 10 - avgLongLoopFails * 100;
 }
 
