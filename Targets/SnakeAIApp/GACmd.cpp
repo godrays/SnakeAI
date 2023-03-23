@@ -139,7 +139,7 @@ void GACmd::PlayModel(const std::string & modelFilename)
     int windowWidth  = m_boardWidth  * m_blockSize;
     int windowHeight = m_boardHeight * m_blockSize;
 
-    // Create a window with a resolution of 800x600 and a title
+    // Create a window with a title.
     m_window.create(sf::VideoMode(windowWidth, windowHeight), "Snake AI Model Play Mode");
     m_window.setFramerateLimit(60);
 
@@ -209,7 +209,8 @@ void GACmd::PlayModel(const std::string & modelFilename)
             elapsedTime = 0;
         }
 
-        DrawGameBoard(text, snakeGame);
+        text.setString("Score: " + std::to_string(snakeGame.GetScore()));
+        DrawGameBoard(text);
     }
 }
 
@@ -324,7 +325,7 @@ void GACmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
 }
 
 
-void GACmd::DrawGameBoard(sf::Text& text, SnakeGame& snakeGame)
+void GACmd::DrawGameBoard(sf::Text& text)
 {
     // Clear the window with a black color
     m_window.clear(sf::Color::Black);
@@ -335,7 +336,6 @@ void GACmd::DrawGameBoard(sf::Text& text, SnakeGame& snakeGame)
         m_window.draw(block);
     }
 
-    text.setString("Score: " + std::to_string(snakeGame.GetScore()));
     m_window.draw(text);
 
     // Display the window content on the screen
