@@ -32,7 +32,8 @@ void GACmd::Run(int argc, const char *argv[])
     static const char USAGE[] =
     R"(
     Usage:
-        SnakeAIApp ga (play|train) --modelfile=<name> [--bw=<number> --bh=<number>] [--bls=<number>]
+        SnakeAIApp ga play  --modelfile=<name> [--bw=<number> --bh=<number>] [--bls=<number>]
+        SnakeAIApp ga train --modelfile=<name> [--bw=<number> --bh=<number>] [--bls=<number>] [--maxGen=<number>]
 
     Options:
 
@@ -41,6 +42,8 @@ void GACmd::Run(int argc, const char *argv[])
         --bw=<number>           Board width in block units.  [Default: 10]
         --bh=<number>           Board height in block units. [Default: 10]
         --bls=<number>          Block size in pixel units.   [Default: 25]
+
+        --maxGen=number         Maximum number of generation for training. [Default: 5000]
     )";
 
     std::map <std::string, docopt::value>  args;
@@ -91,7 +94,8 @@ bool GACmd::ValidateArguments(std::map <std::string, docopt::value>& args, const
 
     if (!CheckRangeLong("--bw",  10, 100) ||
         !CheckRangeLong("--bh",  10, 100) ||
-        !CheckRangeLong("--bls", 10, 100))
+        !CheckRangeLong("--bls", 10, 100) ||
+        !CheckRangeLong("--maxGen", 1, 1000000))
     {
         return false;
     }
@@ -114,6 +118,7 @@ void GACmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
     if (args["--bw"])  m_boardWidth  = args["--bw"].asLong();
     if (args["--bh"])  m_boardHeight = args["--bh"].asLong();
     if (args["--bls"]) m_blockSize   = args["--bls"].asLong();
+    if (args["--maxGen"]) m_maxGeneration = args["--maxGen"].asLong();
 
     if (args["play"].asBool())
     {
@@ -250,10 +255,9 @@ void GACmd::TrainModel(const std::string & modelFilename)
 
     ga.CreateInitialPopulation();
 
-    std::size_t maxGeneration = 50000;
     double bestFitness = -std::numeric_limits<double>::max();
 
-    while (ga.GetGeneration() < maxGeneration)
+    while (ga.GetGeneration() < m_maxGeneration)
     {
         double fitness = ga.GetBestIndividual().GetFitness();
 
