@@ -47,16 +47,23 @@ protected:
                               const std::vector<int> & ffnnLayers, int rndSeed);
 
     // Calculates game's next step.
-    void CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn, std::vector<sf::RectangleShape>& boardBlocks) const;
+    void CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn) const;
 
     // Draws game board.
-    void DrawGameBoard(sf::RenderWindow& window, sf::Text& text, SnakeGame& snakeGame,
-                       std::vector<sf::RectangleShape>& boardBlocks) const;
+    void DrawGameBoard(sf::RenderWindow& window, sf::Text& text, SnakeGame& snakeGame) const;
+
+    // Determine direction of the snake from ML model outputs.
+    SnakeDirection DetermineSnakeDirection(const Eigen::MatrixXd& outputs) const;
+
+    // Updates position of the drawable game board blocks.
+    void UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame);
 
 private:
     int m_boardWidth{10};
     int m_boardHeight{10};
     int m_blockSize{25};
+
+    std::vector<sf::RectangleShape>  m_boardBlocks;
 };
 
 }

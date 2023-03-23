@@ -17,6 +17,12 @@
 #include <fstream>
 
 
+FFNN::FFNN(const std::vector<int> & layers)
+{
+    Init(layers);
+}
+
+
 bool FFNN::Init(const std::vector<int> & layers)
 {
     if (layers.size() < 3)

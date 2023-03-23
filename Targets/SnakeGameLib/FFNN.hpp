@@ -20,6 +20,11 @@
 class FFNN
 {
 public:
+    // Constructors
+    FFNN() = default;
+
+    explicit FFNN(const std::vector<int> & layers);
+
     // Initializes layers.
     bool Init(const std::vector<int> & layers);
 

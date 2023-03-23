@@ -152,9 +152,9 @@ void GACmd::PlayModel(const std::string & modelFilename)
     FFNN  ffnn;
     ffnn.Load(modelFilename);
 
-    // Create block to render on windows. Update initial values.
-    std::vector<sf::RectangleShape>  boardBlocks(m_boardWidth * m_boardHeight);
-    std::for_each(boardBlocks.begin(), boardBlocks.end(), [&](sf::RectangleShape & shape)
+    // Initialize blocks to render on windows.
+    m_boardBlocks.resize(m_boardWidth * m_boardHeight);
+    std::for_each(m_boardBlocks.begin(), m_boardBlocks.end(), [&](sf::RectangleShape & shape)
     {
         shape.setSize({float(m_blockSize), float(m_blockSize)});
         shape.setOutlineThickness(2);
@@ -197,103 +197,36 @@ void GACmd::PlayModel(const std::string & modelFilename)
         elapsedTime += deltaTime;
         if (elapsedTime > elapsedTimeMax)
         {
-            CalculateGameNextStep(snakeGame, ffnn, boardBlocks);
+            CalculateGameNextStep(snakeGame, ffnn);
+            UpdateGameBoardsDrawableBlocks(snakeGame);
             elapsedTime = 0;
         }
 
-        DrawGameBoard(window, text, snakeGame, boardBlocks);
+        DrawGameBoard(window, text, snakeGame);
     }
-}
-
-
-void GACmd::CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn, std::vector<sf::RectangleShape>& boardBlocks) const
-{
-    // Get game parameters to use as inputs to neural network model.
-    auto modelInputs = snakeGame.GetParameters();
-    auto inputs = Eigen::Map<Eigen::RowVectorXd>(modelInputs.data(), modelInputs.size());
-
-    // Make prediction and get new snake directions as model outputs.
-    auto outputs = ffnn.Forward(inputs);
-
-    // Determine the best direction from model outputs. The highest value should be the new direction.
-    SnakeDirection newDir = SnakeDirection::kSnakeDirUp;
-    double maxValue = outputs(0, 0);
-    if (maxValue < outputs(0, 1)) { newDir = SnakeDirection::kSnakeDirDown; maxValue = outputs(0, 1); }
-    if (maxValue < outputs(0, 2)) { newDir = SnakeDirection::kSnakeDirLeft; maxValue = outputs(0, 2); }
-    if (maxValue < outputs(0, 3)) { newDir = SnakeDirection::kSnakeDirRight; }
-    snakeGame.SetDirection(newDir);
-
-    // Update game.
-    snakeGame.Update();
-
-    // Prepare game board to Render.
-    if (snakeGame.GetGameState() != SnakeGameState::kSnakeGameStateRunning)
-    {
-        snakeGame.Reset();
-    }
-
-    // Update game board block colors to reflect the changes.
-    int blockIndex = 0;
-    for (int y=0; y < m_boardHeight; ++y)
-    {
-        for (int x=0; x < m_boardWidth; ++x)
-        {
-            auto & block = boardBlocks[blockIndex];
-            block.setPosition(float(x * m_blockSize), float(y * m_blockSize));
-            switch (snakeGame.GetBoardObject(x, y))
-            {
-                case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
-                case BoardObjType::kBoardObjSnakeBody:   block.setFillColor(sf::Color::Green);   break;
-                case BoardObjType::kBoardObjApple:       block.setFillColor(sf::Color::Red);     break;
-                default:                                 block.setFillColor(sf::Color::Black);   break;
-            }
-            blockIndex++;
-        }
-    }
-}
-
-
-void GACmd::DrawGameBoard(sf::RenderWindow& window, sf::Text& text, SnakeGame& snakeGame,
-                          std::vector<sf::RectangleShape>& boardBlocks) const
-{
-    // Clear the window with a black color
-    window.clear(sf::Color::Black);
-
-    // Draw the board.
-    for (auto block : boardBlocks)
-    {
-        window.draw(block);
-    }
-
-    text.setString("Score: " + std::to_string(snakeGame.GetScore()));
-    window.draw(text);
-
-    // Display the window content on the screen
-    window.display();
 }
 
 
 void GACmd::TrainModel(const std::string & modelFilename)
 {
     std::srand(std::time(nullptr));
-    int rndSeed = rand();
+    int rndSeed = std::rand();
 
-    // First determine genetic material size.
+    // First determine genetic vector size.
     int modelInputSize = static_cast<int>(SnakeGame::GetParameterSize());
     std::vector<int>  ffnnLayers{modelInputSize, modelInputSize, modelInputSize/2, 4};
-    FFNN  dummyNet;
-    dummyNet.Init(ffnnLayers);
-    auto geneticMaterialSize = dummyNet.SerializeAllParameters().size();
+    FFNN  dummyNet(ffnnLayers);
+    auto geneticVectorSize = dummyNet.SerializeAllParameters().size();
 
     const std::size_t  populationSize    = 50;
     const std::size_t  parentRatio       = 50;      // Percent
     const std::size_t  mutateProbability = 1;       // Percent
-    const std::size_t  transferRatio     = 10;      // Percent
+    const std::size_t  transferRatio     = 15;      // Percent
     const std::size_t  crossover         = 50;      // Percent
     const std::size_t  samplingSize      = 2000;    // Game sampling size per individual per generation.
 
     ga::GeneticAlgorithm<double>  ga(populationSize, parentRatio, mutateProbability, transferRatio, crossover,
-                                     geneticMaterialSize);
+                                     geneticVectorSize);
 
     // This method will calculate fitness value for each individual.
     ga.SetFitnessFunc([&](const std::vector<double> & chromosome) -> double
@@ -302,7 +235,7 @@ void GACmd::TrainModel(const std::string & modelFilename)
         return fitness;
     });
 
-    // This method will generate random item (genes) for a genetic material/chromosome.
+    // This method will generate random item (genes) for a genetic vector/material (chromosome).
     ga.SetRandomItemFunc([]() -> double
     {
         double min = -1;
@@ -313,19 +246,17 @@ void GACmd::TrainModel(const std::string & modelFilename)
 
     ga.CreateInitialPopulation();
 
-    double targetFitness = 1000000000000000000.0;
     std::size_t maxGeneration = 50000;
     double bestFitness = 0;
 
-    while (ga.GetBestIndividual().GetFitness() < targetFitness && ga.GetGeneration() < maxGeneration)
+    while (ga.GetGeneration() < maxGeneration)
     {
         // Save the best individual.
         if (ga.GetBestIndividual().GetFitness() > bestFitness)
         {
             bestFitness = ga.GetBestIndividual().GetFitness();
-            FFNN  ffnn;
-            ffnn.Init(ffnnLayers);
-            // Set weights and biases coming from genetic algorithm.
+            FFNN  ffnn(ffnnLayers);
+            // Set genes vector (weights and biases) coming from genetic algorithm.
             ffnn.DeserializeAllParameters(ga.GetBestIndividual().GetValue());
             ffnn.Save(modelFilename);
         }
@@ -342,20 +273,81 @@ void GACmd::TrainModel(const std::string & modelFilename)
 }
 
 
+void GACmd::CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn) const
+{
+    // Get game parameters to use as inputs to neural network model.
+    auto modelInputs = snakeGame.GetParameters();
+    auto inputs = Eigen::Map<Eigen::RowVectorXd>(modelInputs.data(), modelInputs.size());
+
+    // Make prediction and get new snake directions as model outputs.
+    auto outputs = ffnn.Forward(inputs);
+
+    // Determine the best direction from model outputs. The highest value should be the new direction.
+    snakeGame.SetDirection(DetermineSnakeDirection(outputs));
+
+    // Update game.
+    snakeGame.Update();
+
+    // Prepare game board to Render.
+    if (snakeGame.GetGameState() != SnakeGameState::kSnakeGameStateRunning)
+    {
+        snakeGame.Reset();
+    }
+}
+
+
+void GACmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
+{
+    // Update game board block colors to reflect the changes.
+    int blockIndex = 0;
+    for (int y=0; y < m_boardHeight; ++y)
+    {
+        for (int x=0; x < m_boardWidth; ++x)
+        {
+            auto & block = m_boardBlocks[blockIndex];
+            block.setPosition(float(x * m_blockSize), float(y * m_blockSize));
+            switch (snakeGame.GetBoardObject(x, y))
+            {
+                case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
+                case BoardObjType::kBoardObjSnakeBody:   block.setFillColor(sf::Color::Green);   break;
+                case BoardObjType::kBoardObjApple:       block.setFillColor(sf::Color::Red);     break;
+                default:                                 block.setFillColor(sf::Color::Black);   break;
+            }
+            blockIndex++;
+        }
+    }
+}
+
+
+void GACmd::DrawGameBoard(sf::RenderWindow& window, sf::Text& text, SnakeGame& snakeGame) const
+{
+    // Clear the window with a black color
+    window.clear(sf::Color::Black);
+
+    // Draw the board.
+    for (const auto & block : m_boardBlocks)
+    {
+        window.draw(block);
+    }
+
+    text.setString("Score: " + std::to_string(snakeGame.GetScore()));
+    window.draw(text);
+
+    // Display the window content on the screen
+    window.display();
+}
+
+
 double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<double> & value,
                                  const std::vector<int> & ffnnLayers, int rndSeed)
 {
-    const std::size_t  gameBoardWidth  = 10;
-    const std::size_t  gameBoardHeight = 10;
-
     // Setup a neural network.
-    FFNN  ffnn;
-    ffnn.Init(ffnnLayers);
+    FFNN  ffnn(ffnnLayers);
     // Set weights and biases coming from genetic algorithm.
     ffnn.DeserializeAllParameters(value);   // value = genetic material vector = chromosome
 
     // Create a new snake game.
-    SnakeGame snakeGame(gameBoardWidth, gameBoardHeight, rndSeed);
+    SnakeGame snakeGame(m_boardWidth, m_boardHeight, rndSeed);
 
     double highestScore = 0;
     double avgDeaths = 0;
@@ -376,12 +368,7 @@ double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<dou
             auto outputs = ffnn.Forward(inputs);
 
             // Determine the best direction from model outputs. The highest value should be the new direction.
-            SnakeDirection newDir = SnakeDirection::kSnakeDirUp;
-            double maxValue = outputs(0, 0);
-            if (maxValue < outputs(0, 1)) { newDir = SnakeDirection::kSnakeDirDown; maxValue = outputs(0, 1); }
-            if (maxValue < outputs(0, 2)) { newDir = SnakeDirection::kSnakeDirLeft; maxValue = outputs(0, 2); }
-            if (maxValue < outputs(0, 3)) { newDir = SnakeDirection::kSnakeDirRight; }
-            snakeGame.SetDirection(newDir);
+            snakeGame.SetDirection(DetermineSnakeDirection(outputs));
 
             // Update game.
             snakeGame.Update();
@@ -411,6 +398,20 @@ double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<dou
     avgLongLoopFails /= double(samplingSize);
     avgScore /= double(samplingSize);
     return highestScore * 500 + avgScore * 50 - avgDeaths * 15 - avgSteps * 10 - avgLongLoopFails * 100;
+}
+
+
+SnakeDirection GACmd::DetermineSnakeDirection(const Eigen::MatrixXd& outputs) const
+{
+    SnakeDirection newDir = SnakeDirection::kSnakeDirUp;
+
+    double maxValue = outputs(0, 0);
+
+    if (maxValue < outputs(0, 1)) { newDir = SnakeDirection::kSnakeDirDown; maxValue = outputs(0, 1); }
+    if (maxValue < outputs(0, 2)) { newDir = SnakeDirection::kSnakeDirLeft; maxValue = outputs(0, 2); }
+    if (maxValue < outputs(0, 3)) { newDir = SnakeDirection::kSnakeDirRight; }
+
+    return newDir;
 }
 
 } // namespace sai
