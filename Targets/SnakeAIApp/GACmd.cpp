@@ -31,6 +31,8 @@ void GACmd::Run(int argc, const char *argv[])
 {
     static const char USAGE[] =
     R"(
+    Snake AI - Copyright (c) 2023-Present, Arkin Terli. All rights reserved.
+
     Usage:
         SnakeAIApp ga play  --modelfile=<name> [--bw=<number> --bh=<number>] [--bls=<number>]
         SnakeAIApp ga train --modelfile=<name> [--bw=<number> --bh=<number>] [--bls=<number>] [--maxGen=<number>]

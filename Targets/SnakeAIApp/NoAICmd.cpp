@@ -26,6 +26,8 @@ void NoAICmd::Run(int argc, const char *argv[])
 {
     static const char USAGE[] =
     R"(
+    Snake AI - Copyright (c) 2023-Present, Arkin Terli. All rights reserved.
+
     Usage:
         SnakeAIApp noai [--usestep]
 
