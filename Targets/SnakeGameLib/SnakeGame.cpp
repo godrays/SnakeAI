@@ -181,7 +181,7 @@ int64_t SnakeGame::GetRandomNumber(int64_t min, int64_t max)
 {
     // EXTREMELY IMPORTANT: Each game must have its own random number sequence.
     // std::default_random_engine rndEng(m_seed);
-    std::uniform_int_distribution<int>  dist(min, max);
+    std::uniform_int_distribution<int64_t>  dist(min, max);
     return dist(m_rndEng);
 }
 
