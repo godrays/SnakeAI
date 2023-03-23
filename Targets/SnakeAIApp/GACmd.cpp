@@ -326,6 +326,7 @@ double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<dou
     double avgDeaths = 0;
     double avgSteps = 0;
     double avgLongLoopFails = 0;
+    double avgScore = 0;
 
     // Run the same model N times to assess quality of the individual (chromosome/array of genes/NN Model weights).
     for (std::size_t i=0; i<samplingSize; ++i)
@@ -363,6 +364,7 @@ double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<dou
 
         highestScore = std::max<double>(highestScore, snakeGame.GetScore());
         avgSteps += snakeGame.GetSteps();
+        avgScore += snakeGame.GetScore();
 
         snakeGame.Reset();
     }
@@ -372,7 +374,8 @@ double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<dou
     avgSteps /= double(samplingSize);
     avgDeaths /= double(samplingSize);
     avgLongLoopFails /= double(samplingSize);
-    return highestScore * 500 - avgDeaths * 15 - avgSteps * 10 - avgLongLoopFails * 100;
+    avgScore /= double(samplingSize);
+    return highestScore * 500 + avgScore * 50 - avgDeaths * 15 - avgSteps * 10 - avgLongLoopFails * 100;
 }
 
 } // namespace sai
