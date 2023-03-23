@@ -141,32 +141,8 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
         // Time elapsed between two frames.
         float deltaTime = clock.restart().asSeconds();
 
-        // Process events
-        sf::Event event{};
-        while (m_window.pollEvent(event))
-        {
-            // Close the window when the user clicks the close button
-            if (event.type == sf::Event::Closed)
-            {
-                m_window.close();
-            }
-
-            // Check if the event is a key pressed event
-            if (event.type == sf::Event::KeyReleased)
-            {
-                updateGame = true;
-                // Check if the pressed key is the space key
-                switch (event.key.code)
-                {
-                    case sf::Keyboard::Escape:     m_window.close();                                        break;
-                    case sf::Keyboard::Left:       snakeGame.SetDirection(SnakeDirection::kSnakeDirLeft);   break;
-                    case sf::Keyboard::Right:      snakeGame.SetDirection(SnakeDirection::kSnakeDirRight);  break;
-                    case sf::Keyboard::Up:         snakeGame.SetDirection(SnakeDirection::kSnakeDirUp);     break;
-                    case sf::Keyboard::Down:       snakeGame.SetDirection(SnakeDirection::kSnakeDirDown);   break;
-                    default: break;
-                }
-            }
-        }
+        // Processes window and keypress events.
+        ProcessEvents(snakeGame, updateGame);
 
         elapsedTime += deltaTime;
 
@@ -229,5 +205,37 @@ void NoAICmd::DrawGameBoard(sf::Text& text)
     // Display the window content on the screen
     m_window.display();
 }
+
+
+void NoAICmd::ProcessEvents(SnakeGame& snakeGame, bool & updateGame)
+{
+    // Process events
+    sf::Event event{};
+    while (m_window.pollEvent(event))
+    {
+        // Close the window when the user clicks the close button
+        if (event.type == sf::Event::Closed)
+        {
+            m_window.close();
+        }
+
+        // Check if the event is a key pressed event
+        if (event.type == sf::Event::KeyReleased)
+        {
+            updateGame = true;
+            // Check if the pressed key is the space key
+            switch (event.key.code)
+            {
+                case sf::Keyboard::Escape:     m_window.close();                                        break;
+                case sf::Keyboard::Left:       snakeGame.SetDirection(SnakeDirection::kSnakeDirLeft);   break;
+                case sf::Keyboard::Right:      snakeGame.SetDirection(SnakeDirection::kSnakeDirRight);  break;
+                case sf::Keyboard::Up:         snakeGame.SetDirection(SnakeDirection::kSnakeDirUp);     break;
+                case sf::Keyboard::Down:       snakeGame.SetDirection(SnakeDirection::kSnakeDirDown);   break;
+                default: break;
+            }
+        }
+    }
+}
+
 
 } // namespace sai

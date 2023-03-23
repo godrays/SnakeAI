@@ -46,6 +46,9 @@ protected:
     // Updates position of the drawable game board blocks.
     void UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame);
 
+    // Processes window and keypress events.
+    void ProcessEvents(SnakeGame& snakeGame, bool & updateGame);
+
 private:
     int m_boardWidth{10};
     int m_boardHeight{10};

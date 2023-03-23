@@ -178,27 +178,8 @@ void GACmd::PlayModel(const std::string & modelFilename)
         // Time elapsed between two frames.
         float deltaTime = clock.restart().asSeconds();
 
-        // Process events
-        sf::Event event{};
-        while (m_window.pollEvent(event))
-        {
-            // Close the window when the user clicks the close button
-            if (event.type == sf::Event::Closed)
-                m_window.close();
-
-            // Check if the event is a key pressed event
-            if (event.type == sf::Event::KeyPressed)
-            {
-                if (event.key.code == sf::Keyboard::Escape)
-                    m_window.close();
-            }
-            else if (event.type == sf::Event::KeyReleased)
-            {
-                // Increase or decrease speed of game update.
-                if (event.key.code == sf::Keyboard::Dash  && elapsedTimeMax > 0) elapsedTimeMax -= 0.01;
-                if (event.key.code == sf::Keyboard::Equal && elapsedTimeMax < 1) elapsedTimeMax += 0.01;
-            }
-        }
+        // Processes window and keypress events.
+        ProcessEvents(elapsedTimeMax);
 
         // Call game update only every one second to slow down the snake movement.
         elapsedTime += deltaTime;
@@ -418,6 +399,32 @@ SnakeDirection GACmd::DetermineSnakeDirection(const Eigen::MatrixXd& outputs) co
     if (maxValue < outputs(0, 3)) { newDir = SnakeDirection::kSnakeDirRight; }
 
     return newDir;
+}
+
+
+void GACmd::ProcessEvents(float& elapsedTimeMax)
+{
+    // Process events
+    sf::Event event{};
+    while (m_window.pollEvent(event))
+    {
+        // Close the window when the user clicks the close button
+        if (event.type == sf::Event::Closed)
+            m_window.close();
+
+        // Check if the event is a key pressed event
+        if (event.type == sf::Event::KeyPressed)
+        {
+            if (event.key.code == sf::Keyboard::Escape)
+                m_window.close();
+        }
+        else if (event.type == sf::Event::KeyReleased)
+        {
+            // Increase or decrease speed of game update.
+            if (event.key.code == sf::Keyboard::Dash  && elapsedTimeMax > 0) elapsedTimeMax -= 0.01;
+            if (event.key.code == sf::Keyboard::Equal && elapsedTimeMax < 1) elapsedTimeMax += 0.01;
+        }
+    }
 }
 
 } // namespace sai
