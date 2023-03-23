@@ -265,18 +265,6 @@ void GACmd::DrawGameBoard(sf::RenderWindow& window, sf::Text& text, SnakeGame& s
         window.draw(block);
     }
 
-    // Draw text
-    std::string gameStateStr;
-    switch (snakeGame.GetGameState())
-    {
-        case SnakeGameState::kSnakeGameStateRunning:            gameStateStr = "Running";       break;
-        case SnakeGameState::kSnakeGameStateWon:                gameStateStr = "Won";           break;
-        case SnakeGameState::kSnakeGameStateFailedHitItself:    gameStateStr = "Hit Itself";    break;
-        case SnakeGameState::kSnakeGameStateFailedHitWall:      gameStateStr = "Hit Wall";      break;
-        case SnakeGameState::kSnakeGameStateFailedLongLoop:     gameStateStr = "Long Loop";     break;
-        default:                                                gameStateStr = "Invalid";       break;
-    }
-
     text.setString("Score: " + std::to_string(snakeGame.GetScore()));
     window.draw(text);
 
