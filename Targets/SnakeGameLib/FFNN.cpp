@@ -47,6 +47,7 @@ Eigen::MatrixXd FFNN::Forward(const Eigen::MatrixXd & input)
     [[maybe_unused]] auto sigmoid = [](double x) { return 1.0 / (1.0 + std::exp(-x)); };
     [[maybe_unused]] auto tanh    = [](double x) { return (std::exp(x) - std::exp(-x)) / (std::exp(x) + std::exp(-x)); };
     [[maybe_unused]] auto relu    = [](double x) { return std::max<double>(x, 0); };
+    [[maybe_unused]] auto lrelu   = [](double x) { return x > 0 ? x : x * 0.001;  };
 
     Eigen::MatrixXd H = input;
     for (size_t i=0; i<m_weights.size(); ++i)
