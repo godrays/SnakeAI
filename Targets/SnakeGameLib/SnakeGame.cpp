@@ -118,28 +118,32 @@ std::vector<double> SnakeGame::GetParameters()
     std::vector<double>  params;
 
     Position snakeHeadPos = m_snake.front();
+    int x = snakeHeadPos.x;
+    int y = snakeHeadPos.y;
+
+    auto IsPositionSafe = [&](int x, int y)
+    {
+        return x >= 0 && y >= 0 && x < m_boardWidth && y < m_boardHeight &&
+               (m_board[y][x] == BoardObjType::kBoardObjEmpty || m_board[y][x] == BoardObjType::kBoardObjApple);
+    };
+
+    // Are surrounding blocks safe to move? (4 parameters)
+    double isN = IsPositionSafe(x, y-1) ? 1 : 0;
+    double isS = IsPositionSafe(x, y+1) ? 1 : 0;
+    double isW = IsPositionSafe(x-1, y) ? 1 : 0;
+    double isE = IsPositionSafe(x+1, y) ? 1 : 0;
 
     // Distance from snake's head to boarder of the game boards. (4 parameters)
-    double N = snakeHeadPos.y;
-    double S = m_boardHeight - 1 - snakeHeadPos.y;
-    double W = snakeHeadPos.x;
-    double E = m_boardWidth - 1 - snakeHeadPos.x;
+    double dN = y;
+    double dS = m_boardHeight - 1 - y;
+    double dW = x;
+    double dE = m_boardWidth - 1 - x;
 
-    // Distance from snake's head to either snake's body or game board borders. (8 parameters)
-    double sN = GetDistance(snakeHeadPos,  0, -1, true);
-    double sS = GetDistance(snakeHeadPos,  0,  1, true);
-    double sW = GetDistance(snakeHeadPos, -1,  0, true);
-    double sE = GetDistance(snakeHeadPos,  1,  0, true);
-    double sNW = GetDistance(snakeHeadPos, -1, -1, true);
-    double sNE = GetDistance(snakeHeadPos,  1, -1, true);
-    double sSW = GetDistance(snakeHeadPos, -1,  1, true);
-    double sSE = GetDistance(snakeHeadPos,  1,  1, true);
-
-    // Direction to apple from snake's head. (2 parameters)
-    double aN = m_applePos.y < snakeHeadPos.y ? 1 : 0;
-    double aS = m_applePos.y > snakeHeadPos.y ? 1 : 0;
-    double aW = m_applePos.x < snakeHeadPos.x ? 1 : 0;
-    double aE = m_applePos.x > snakeHeadPos.x ? 1 : 0;
+    // Direction to apple from snake's head. (4 parameters)
+    double aN = m_applePos.y < y ? 1 : 0;
+    double aS = m_applePos.y > y ? 1 : 0;
+    double aW = m_applePos.x < x ? 1 : 0;
+    double aE = m_applePos.x > x ? 1 : 0;
 
     // Snake's current moving direction.  (4 parameters)
     double snakesDirUp    = 0;
@@ -158,14 +162,13 @@ std::vector<double> SnakeGame::GetParameters()
 
     double bW = m_boardWidth;
     double bH = m_boardHeight;
-    double bD = std::sqrt(bW*bW + bH*bH);
 
     // Add normalized parameters.
     params = {
-        N/bH, S/bH, W/bW, E/bW,                                     // Normalized snakes' distances to walls.
-        snakesDirUp, snakesDirDown, snakesDirLeft, snakesDirRight,  // Snakes direction (1 dir is active at a time)
-        sN/bH, sS/bH, sW/bW, sE/bW, sNW/bD, sNE/bD, sSW/bD, sSE/bD, // Normalized snakes' distance to body or walls.
+        isN, isS, isW, isE,                                         // Surrounding blocks safety checks.
+        dN/bH, dS/bH, dW/bW, dE/bW,                                 // Normalized snakes' distances to walls.
         aN, aS, aW, aE,                                             // Apple's direction relative to snakes' head.
+        snakesDirUp, snakesDirDown, snakesDirLeft, snakesDirRight,  // Snakes direction (1 dir is active at a time)
     };
 
     if (params.size() != m_parameterSize)
