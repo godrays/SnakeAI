@@ -17,6 +17,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
 // System includes
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -30,12 +31,15 @@ void GACmd::Run(int argc, const char *argv[])
     static const char USAGE[] =
     R"(
     Usage:
-        SnakeAIApp ga (play|train) --modelfile=<name>
+        SnakeAIApp ga (play|train) --modelfile=<name> [--bw=<number> --bh=<number>] [--bls=<number>]
 
     Options:
 
-        --modelfile=<name>    Filename to save model.
+        --modelfile=<name>      Model filename.
 
+        --bw=<number>           Board width in block units.  [Default: 10]
+        --bh=<number>           Board height in block units. [Default: 10]
+        --bls=<number>          Block size in pixel units.   [Default: 25]
     )";
 
     std::map <std::string, docopt::value>  args;
@@ -71,9 +75,31 @@ bool GACmd::ValidateArguments(std::map <std::string, docopt::value>& args, const
         return false;
     }
 
+    auto CheckRangeLong = [&](const std::string& paramName, int min, int max) -> bool
+    {
+        if (args[paramName] && (args[paramName].asLong() < min || args[paramName].asLong() > max))
+        {
+            std::cout << "Invalid parameter range: " << paramName
+                      << " must be in [" << min << "," << max << "]" << std::endl;
+            return false;
+        }
+        return true;
+    };
+
     // VALIDATE REQUIRED ARGUMENTS
 
-    // TODO: Validate the rest of the cmd-line parameters values here.
+    if (!CheckRangeLong("--bw",  10, 100) ||
+        !CheckRangeLong("--bh",  10, 100) ||
+        !CheckRangeLong("--bls", 10, 100))
+    {
+        return false;
+    }
+
+    if (args["play"].asBool() && !std::filesystem::exists(args["--modelfile"].asString()))
+    {
+        std::cout << "Invalid --modelfile value. File does not exist!" << std::endl;
+        return false;
+    }
 
     return true;
 }
@@ -82,6 +108,11 @@ bool GACmd::ValidateArguments(std::map <std::string, docopt::value>& args, const
 void GACmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 {
     std::string  modelFilename = args["--modelfile"].asString();
+
+    // Override parameters here
+    if (args["--bw"])  m_boardWidth  = args["--bw"].asLong();
+    if (args["--bh"])  m_boardHeight = args["--bh"].asLong();
+    if (args["--bls"]) m_blockSize   = args["--bls"].asLong();
 
     if (args["play"].asBool())
     {
@@ -98,12 +129,8 @@ void GACmd::PlayModel(const std::string & modelFilename)
 {
     std::srand(std::time(nullptr));
 
-    int windowWidth  = 500;
-    int windowHeight = 500;
-    m_blockWidth  = 50;
-    m_blockHeight = 50;
-    m_boardWidth  = windowWidth / m_blockWidth;
-    m_boardHeight = windowHeight / m_blockHeight;
+    int windowWidth  = m_boardWidth  * m_blockSize;
+    int windowHeight = m_boardHeight * m_blockSize;
 
     // Create a window with a resolution of 800x600 and a title
     sf::RenderWindow   window(sf::VideoMode(windowWidth, windowHeight), "Snake AI Model Play Mode");
@@ -129,7 +156,7 @@ void GACmd::PlayModel(const std::string & modelFilename)
     std::vector<sf::RectangleShape>  boardBlocks(m_boardWidth * m_boardHeight);
     std::for_each(boardBlocks.begin(), boardBlocks.end(), [&](sf::RectangleShape & shape)
     {
-        shape.setSize({float(m_blockWidth), float(m_blockHeight)});
+        shape.setSize({float(m_blockSize), float(m_blockSize)});
         shape.setOutlineThickness(2);
         shape.setOutlineColor(sf::Color::Black);
     });
@@ -212,7 +239,7 @@ void GACmd::CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn, std::vector<
         for (int x=0; x < m_boardWidth; ++x)
         {
             auto & block = boardBlocks[blockIndex];
-            block.setPosition(float(x * m_blockWidth), float(y * m_blockHeight));
+            block.setPosition(float(x * m_blockSize), float(y * m_blockSize));
             switch (snakeGame.GetBoardObject(x, y))
             {
                 case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;

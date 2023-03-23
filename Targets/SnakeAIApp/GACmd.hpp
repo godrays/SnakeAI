@@ -54,10 +54,9 @@ protected:
                        std::vector<sf::RectangleShape>& boardBlocks) const;
 
 private:
-    int m_boardWidth{0};
-    int m_boardHeight{0};
-    int m_blockWidth{0};
-    int m_blockHeight{0};
+    int m_boardWidth{10};
+    int m_boardHeight{10};
+    int m_blockSize{25};
 };
 
 }
