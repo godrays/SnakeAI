@@ -158,6 +158,12 @@ void GACmd::PlayModel(const std::string & modelFilename)
                 if (event.key.code == sf::Keyboard::Escape)
                     window.close();
             }
+            else if (event.type == sf::Event::KeyReleased)
+            {
+                // Increase or decrease speed of game update.
+                if (event.key.code == sf::Keyboard::Dash  && elapsedTimeMax > 0) elapsedTimeMax -= 0.01;
+                if (event.key.code == sf::Keyboard::Equal && elapsedTimeMax < 1) elapsedTimeMax += 0.01;
+            }
         }
 
         // Call game update only every one second to slow down the snake movement.
