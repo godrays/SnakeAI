@@ -75,6 +75,10 @@ public:
     // Returns 2D Game board.
     BoardObjType GetBoardObject(int x, int y)
     {
+        if (x < 0 || y < 0 || x >= m_boardWidth || y >= m_boardHeight)
+        {
+            throw std::runtime_error("Out-of-bounds access in GetBoardObject()");
+        }
         return m_board[y][x];
     }
 
