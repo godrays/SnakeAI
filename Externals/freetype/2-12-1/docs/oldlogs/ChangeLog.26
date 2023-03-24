@@ -1563,7 +1563,7 @@
 	[base] Empower `FT_Library_SetLcdFilterWeights'.
 
 	* src/base/ftlcdfil.c (FT_Library_SetLcdFilterWeights): Enable filter
-	in addition to setting weights.
+	in addition to setting m_weights.
 	(FT_Library_SetLcdFilter): Clean out FT_FORCE_LIGHT_LCD_FILTER and
 	FT_FORCE_LEGACY_LCD_FILTER.
 	* include/freetype/ftlcdfil.h: Documentation update.
@@ -4481,7 +4481,7 @@
 	[truetype] Improve `gvar' handling.
 
 	* src/truetype/ttgxvar.c (ft_var_readpackedpoints): Correctly handle
-	single-element runs.  Cf. glyph `Q' in Skia.ttf with weights larger
+	single-element runs.  Cf. glyph `Q' in Skia.ttf with m_weights larger
 	than the default.
 
 2015-03-20  Alexei Podtelezhnikov  <apodtele@gmail.com>

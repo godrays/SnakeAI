@@ -129,7 +129,7 @@ II. Rendering Technology
   Each  point of  the curve  is a  weighted average  of  the control
   points.
 
-  As all weights  are positive and always sum up  to 1, whatever the
+  As all m_weights  are positive and always sum up  to 1, whatever the
   value  of t,  each arc  point lies  within the  triangle (polygon)
   defined by the arc's three (four) control points.
 

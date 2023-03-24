@@ -743,7 +743,7 @@ CHANGES BETWEEN 2.7.1 and 2.8 (2017-May-13)
     - A new  function `FT_Face_Properties' allows the  control of some
       module  and   library  properties  per  font.    Currently,  the
       following properties can be  handled: stem darkening, LCD filter
-      weights, and the random seed for the `random' CFF operator.
+      m_weights, and the random seed for the `random' CFF operator.
 
     - The PCF change to show more `colorful'  family names (introduced
       in version 2.7.1) was too radical; it can now be configured with
@@ -1113,7 +1113,7 @@ CHANGES BETWEEN 2.6.2 and 2.6.3 (2016-Feb-08)
       followed by an uppercase letter are reserved in both C and C++.
 
     - Function  `FT_Library_SetLcdFilterWeights'  now  also  activates
-      custom LCD filter weights (instead of just adjusting them).
+      custom LCD filter m_weights (instead of just adjusting them).
 
     - Support for  `unpatented hinting'  has been  completely removed:
       Consequently,  the two  functions `FT_Face_CheckTrueTypePatents'
@@ -2141,7 +2141,7 @@ CHANGES BETWEEN 2.3.12 and 2.4.0 (2010-Jul-12)
       TT_CONFIG_OPTION_UNPATENTED_HINTING).
 
     - A new function `FT_Library_SetLcdFilterWeights' is available  to
-      adjust the filter weights set by `FT_Library_SetLcdFilter'.
+      adjust the filter m_weights set by `FT_Library_SetLcdFilter'.
 
 
   II. MISCELLANEOUS

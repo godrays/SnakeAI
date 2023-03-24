@@ -6350,7 +6350,7 @@
 	Patches to the auto-hinter in order to slightly improve the output.
 	Note that everything is controlled through the new
 	FT_CONFIG_OPTION_CHESTER_HINTS defined in `ftoption.h'.  There are
-	also individual FT_CONFIG_CHESTER_XXX macros to control individual
+	also Individual FT_CONFIG_CHESTER_XXX macros to control Individual
 	`features'.
 
 	Note that all improvements are enabled by default, but can be
@@ -6360,7 +6360,7 @@
 	* include/freetype/config/ftoption.h
 	(FT_CONFIG_OPTION_CHESTER_HINTS): New macro.
 	(FT_CONFIG_CHESTER_{SMALL_F,ASCENDER,SERIF,STEM,BLUE_SCALE})
-	[FT_CONFIG_OPTION_CHESTER_HINTS]: New macros to control individual
+	[FT_CONFIG_OPTION_CHESTER_HINTS]: New macros to control Individual
 	features.
 
 	* src/autohint/ahglobal.c (blue_chars) [FT_CONFIG_CHESTER_SMALL_F]:
@@ -9254,7 +9254,7 @@
 2002-02-27  David Turner  <david@freetype.org>
 
 	* src/sfnt/ttload.c (TT_Load_Names): Simplifying and securing the
-	names table loader.  Invalid individual name entries are now handled
+	names table loader.  Invalid Individual name entries are now handled
 	correctly.  This allows the loading of very buggy fonts like
 	`foxjump.ttf' without allocating tons of memory and causing crashes.
 

@@ -139,7 +139,7 @@ fi
 ax_pthread_flags="pthreads none -Kthread -pthread -pthreads -mthreads pthread --thread-safe -mt pthread-config"
 
 # The ordering *is* (sometimes) important.  Some notes on the
-# individual items follow:
+# Individual items follow:
 
 # pthreads: AIX (must check this before -lpthread)
 # none: in case threads are in libc; should be tried before -Kthread and

@@ -298,7 +298,7 @@ RFC 1952             GZIP File Format Specification             May 1996
             gzip and which is documented elsewhere.
 
          FLG (FLaGs)
-            This flag byte is divided into individual bits as follows:
+            This flag byte is divided into Individual bits as follows:
 
                bit 0   FTEXT
                bit 1   FHCRC

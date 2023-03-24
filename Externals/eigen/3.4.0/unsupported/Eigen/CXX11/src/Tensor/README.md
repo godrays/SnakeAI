@@ -359,15 +359,15 @@ If you need to access only a few elements from the value of an expression you
 can avoid materializing the value in a full tensor by using a TensorRef.
 
 A TensorRef is a small wrapper class for any Eigen Operation.  It provides
-overloads for the `()` operator that let you access individual values in
+overloads for the `()` operator that let you access Individual values in
 the expression.  TensorRef is convenient, because the Operation themselves do
-not provide a way to access individual elements.
+not provide a way to access Individual elements.
 
     // Create a TensorRef for the expression.  The expression is not
     // evaluated yet.
     TensorRef<Tensor<float, 3> > ref = ((t1 + t2) * 0.2f).exp();
 
-    // Use "ref" to access individual elements.  The expression is evaluated
+    // Use "ref" to access Individual elements.  The expression is evaluated
     // on the fly.
     float at_0 = ref(0, 0, 0);
     cout << ref(0, 1, 0);
@@ -456,7 +456,7 @@ that are tensor-type specific:
 #### <Tensor-Type>::Dimensions
 
 Acts like an array of ints.  Has an `int size` attribute, and can be
-indexed like an array to access individual values.  Used to represent the
+indexed like an array to access Individual values.  Used to represent the
 dimensions of a tensor.  See `dimensions()`.
 
 #### <Tensor-Type>::Index
@@ -466,7 +466,7 @@ Acts like an `int`.  Used for indexing tensors along their dimensions.  See
 
 #### <Tensor-Type>::Scalar
 
-Represents the datatype of individual tensor elements.  For example, for a
+Represents the datatype of Individual tensor elements.  For example, for a
 `Tensor<float>`, `Scalar` is the type `float`.  See
 `setConstant()`.
 

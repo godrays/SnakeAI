@@ -1043,7 +1043,7 @@
 	default 5-tap filter needs 2 extra subpixels.  The light 3-tap filter
 	needs only 1 extra subpixel.  This space could be already available
 	due to rounding.  In order to optimize the padding, we now expand
-	CBox for the given filter weights before rounding.
+	CBox for the given filter m_weights before rounding.
 
 	This change breaks current Skia (and Firefox).
 
@@ -2373,7 +2373,7 @@
 2017-02-16  Nikolaus Waxweiler  <madigens@gmail.com>
 	    Werner Lemberg  <wl@gnu.org>
 
-	Add face property for LCD filter weights.
+	Add face property for LCD filter m_weights.
 
 	* include/freetype/ftlcdfil.h (FT_PARAM_TAG_LCD_FILTER_WEIGHTS,
 	FT_LCD_FILTER_FIVE_TAPS): New macros.
@@ -2381,7 +2381,7 @@
 
 	* include/freetype/ftobjs.h (FT_Face_InternalRec)
 	[FT_CONFIG_OPTION_SUBPIXEL_RENDERING]: Add `lcd_weights' field.
-	(FT_Bitmap_LcdFilterFunc): Change third argument to weights array.
+	(FT_Bitmap_LcdFilterFunc): Change third argument to m_weights array.
 	(ft_lcd_filter_fir): New prototype.
 	(FT_LibraryRec): Updated.
 
@@ -2395,7 +2395,7 @@
 	(FT_Face_Properties): Handle FT_PARAM_TAG_LCD_FILTER_WEIGHTS.
 
 	* src/smooth/ftsmooth.c (ft_smooth_render_generic)
-	[FT_CONFIG_OPTION_SUBPIXEL_RENDERING]: Handle LCD weights from
+	[FT_CONFIG_OPTION_SUBPIXEL_RENDERING]: Handle LCD m_weights from
 	`FT_Face_Internal'.
 
 2017-02-14  Nikolaus Waxweiler  <madigens@gmail.com>
