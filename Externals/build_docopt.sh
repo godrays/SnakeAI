@@ -13,9 +13,6 @@ pushd .
 git clone --recurse-submodules -b v$lib_version $lib_url ./$lib_name/$lib_version
 cd $lib_name/$lib_version
 
-# Patch URL
-cp ../../DocOptPatch.txt ./CMakeLists.txt
-
 rm -rf build
 rm -rf installed
 mkdir build
