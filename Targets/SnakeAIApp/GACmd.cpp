@@ -45,7 +45,7 @@ void GACmd::Run(int argc, const char *argv[])
         --bh=<number>           Board height in block units. [Default: 10]
         --bls=<number>          Block size in pixel units.   [Default: 25]
 
-        --maxGen=number         Maximum number of generation for training. [Default: 5000]
+        --maxGen=number         Maximum number of generation for training. [Default: 1000]
     )";
 
     std::map <std::string, docopt::value>  args;

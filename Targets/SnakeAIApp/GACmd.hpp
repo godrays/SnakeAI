@@ -65,7 +65,7 @@ private:
     int m_boardWidth{10};
     int m_boardHeight{10};
     int m_blockSize{25};
-    std::size_t m_maxGeneration{5000};
+    std::size_t m_maxGeneration{1000};
 
     sf::RenderWindow   m_window;
     std::vector<sf::RectangleShape>  m_boardBlocks;
