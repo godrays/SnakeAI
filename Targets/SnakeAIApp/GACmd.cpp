@@ -233,8 +233,7 @@ void GACmd::TrainModel(const std::string & modelFilename)
         // Scale the random fraction to the desired range [min, max]
         constexpr double min = -1;
         constexpr double max =  1;
-        std::uniform_real_distribution<>  dist(min, max);
-        return dist(rndEngine);
+        return std::uniform_real_distribution<double>(min, max)(rndEngine);
     });
 
     ga.CreateInitialPopulation();

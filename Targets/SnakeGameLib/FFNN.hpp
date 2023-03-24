@@ -68,4 +68,5 @@ private:
 private:
     std::vector<Eigen::MatrixXd>  m_weights;
     std::vector<Eigen::MatrixXd>  m_biases;
+    std::mt19937                  m_rndEngine;
 };

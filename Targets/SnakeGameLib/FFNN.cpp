@@ -31,9 +31,12 @@ bool FFNN::Init(const std::vector<int> & layers)
         return false;
     }
 
+    std::random_device  rndDev;
+    m_rndEngine.seed(rndDev());
+
     auto getRandomNumber = [&](double min, double max)
     {
-        return min + (max - min) * (static_cast<double>(std::rand()) / static_cast<double>(RAND_MAX));
+        return std::uniform_real_distribution<double>(min, max)(m_rndEngine);
     };
     auto randGen = [&getRandomNumber](){ return getRandomNumber(-1, 1); };
 

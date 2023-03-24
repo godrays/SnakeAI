@@ -96,8 +96,8 @@ void SnakeGame::Reset()
     m_direction = SnakeDirection::kSnakeDirUp;
 
     Position  snakeHead;
-    snakeHead.x = static_cast<int>(GetRandomNumber(2, m_boardWidth-2));
-    snakeHead.y = static_cast<int>(GetRandomNumber(2, m_boardHeight-2));
+    snakeHead.x = GetRandomNumber(2, m_boardWidth-2);
+    snakeHead.y = GetRandomNumber(2, m_boardHeight-2);
 
     // Add snake head.
     m_snake.emplace_back(snakeHead);
@@ -180,12 +180,11 @@ std::vector<double> SnakeGame::GetParameters()
 }
 
 
-int64_t SnakeGame::GetRandomNumber(int64_t min, int64_t max)
+int SnakeGame::GetRandomNumber(int min, int max)
 {
     // EXTREMELY IMPORTANT: Each game must have its own random number sequence.
     // std::default_random_engine rndEng(m_seed);
-    std::uniform_int_distribution<int64_t>  dist(min, max);
-    return dist(m_rndEng);
+    return std::uniform_int_distribution<int>(min, max)(m_rndEng);
 }
 
 
@@ -250,7 +249,7 @@ bool SnakeGame::PlaceApple()
         return false;
     }
 
-    auto newSpotIndex = GetRandomNumber(0, emptySpots.size()-1);
+    auto newSpotIndex = GetRandomNumber(0, static_cast<int>(emptySpots.size()-1));
     m_applePos = emptySpots[newSpotIndex];
 
     return true;

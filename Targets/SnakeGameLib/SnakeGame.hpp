@@ -136,8 +136,8 @@ public:
     }
 
 private:
-    // Return a random number between 0 and 1.
-    int64_t GetRandomNumber(int64_t min, int64_t max);
+    // Return a random number between min and max.
+    int GetRandomNumber(int min, int max);
 
     // Clears the board.
     void ClearBoard();

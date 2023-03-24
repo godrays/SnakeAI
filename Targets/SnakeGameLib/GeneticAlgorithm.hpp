@@ -73,6 +73,9 @@ public:
         m_transferCount = (transferRatio * maxPopulation) / 100;
         m_crossoverThreshold = (crossover * maxPopulation) / 100;
         m_newIndividualsPerGeneration = maxPopulation - m_transferCount;
+
+        std::random_device  rndDev;
+        m_rndEngine.seed(rndDev());
     }
 
     void CreateInitialGeneration()
@@ -219,10 +222,9 @@ private:
         }
     }
 
-    std::size_t GetRandomNumber(const std::size_t min, const std::size_t max)
+    std::size_t GetRandomNumber(std::size_t min, std::size_t max)
     {
-        const std::size_t values_count = max - min + 1;
-        return rand() % values_count + min;
+        return std::uniform_int_distribution<std::size_t>(min, max)(m_rndEngine);
     }
 
     // Sorts all individuals in current population based on their fitness values. The highest value is the best.
@@ -246,6 +248,7 @@ private:
 
     std::function<double(const std::vector<T> & value)>   m_fitnessFunc;
     std::function<T()>   m_randomItemFunc;
+    std::mt19937         m_rndEngine;
 };
 
 
