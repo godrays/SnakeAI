@@ -182,8 +182,6 @@ std::vector<double> SnakeGame::GetParameters()
 
 int SnakeGame::GetRandomNumber(int min, int max)
 {
-    // EXTREMELY IMPORTANT: Each game must have its own random number sequence.
-    // std::default_random_engine rndEng(m_seed);
     return std::uniform_int_distribution<int>(min, max)(m_rndEng);
 }
 
