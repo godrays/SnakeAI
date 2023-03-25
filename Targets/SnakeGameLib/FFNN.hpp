@@ -86,7 +86,7 @@ private:
 };
 
 
-// Activation methods Forward declaration.
+// Activation methods.
 
 class Sigmoid
 {
