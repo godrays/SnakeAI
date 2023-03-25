@@ -140,7 +140,7 @@ public:
             results.emplace_back(std::move(futureRet));
         }
 
-        // Wait until all threads are finished.
+        // Wait until all tasks are finished.
         for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
             results[i].wait();
@@ -214,7 +214,7 @@ private:
             results.emplace_back(std::move(futureRet));
         }
 
-        // Wait until all threads are finished.
+        // Wait until all tasks are finished.
         for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
             results[i].wait();
