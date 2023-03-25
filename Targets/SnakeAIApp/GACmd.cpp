@@ -268,7 +268,7 @@ void GACmd::CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn) const
     auto inputs = Eigen::Map<Eigen::RowVectorXd>(modelInputs.data(), modelInputs.size());
 
     // Make prediction and get new snake directions as model outputs.
-    auto outputs = ffnn.Forward(inputs);
+    auto outputs = ffnn.Forward<Tanh, Sigmoid>(inputs);
 
     // Determine the best direction from model outputs. The highest value should be the new direction.
     snakeGame.SetDirection(DetermineSnakeDirection(outputs));
@@ -352,7 +352,7 @@ double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<dou
             auto inputs = Eigen::Map<Eigen::RowVectorXd>(modelInputs.data(), modelInputs.size());
 
             // Make prediction and get new snake directions as model outputs.
-            auto outputs = ffnn.Forward(inputs);
+            auto outputs = ffnn.Forward<Tanh, Sigmoid>(inputs);
 
             // Determine the best direction from model outputs. The highest value should be the new direction.
             snakeGame.SetDirection(DetermineSnakeDirection(outputs));

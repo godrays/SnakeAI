@@ -29,7 +29,21 @@ public:
     bool Init(const std::vector<int> & layers);
 
     // Makes prediction by using input data.
-    Eigen::MatrixXd Forward(const Eigen::MatrixXd & input);
+    template<typename activationHiddenLayer, typename activationOutputLayer>
+    Eigen::MatrixXd Forward(const Eigen::MatrixXd & input)
+    {
+        Eigen::MatrixXd H = input;
+        for (size_t i=0; i<m_weights.size(); ++i)
+        {
+            H = H * m_weights[i] + m_biases[i];
+            // Apply activation to hidden layers.
+            if (i < m_weights.size()-1)
+                H = activationHiddenLayer::Calculate(H);
+        }
+
+        // Apply activation to outputs.
+        return activationOutputLayer::Calculate(H);
+    }
 
     // Returns all weights as a single vector.
     std::vector<double>  SerializeWeights();
@@ -69,4 +83,41 @@ private:
     std::vector<Eigen::MatrixXd>  m_weights;
     std::vector<Eigen::MatrixXd>  m_biases;
     std::mt19937                  m_rndEngine;
+};
+
+
+// Activation methods Forward declaration.
+
+class Sigmoid
+{
+public:
+    static Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat);
+};
+
+
+class Tanh
+{
+public:
+    static Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat);
+};
+
+
+class Relu
+{
+public:
+    static Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat);
+};
+
+
+class LRelu
+{
+public:
+    static Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat);
+};
+
+
+class Softmax
+{
+public:
+    static Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat);
 };

@@ -51,31 +51,6 @@ bool FFNN::Init(const std::vector<int> & layers)
 }
 
 
-Eigen::MatrixXd FFNN::Forward(const Eigen::MatrixXd & input)
-{
-    [[maybe_unused]] auto sigmoid = [](double x) { return 1.0 / (1.0 + std::exp(-x)); };
-    [[maybe_unused]] auto tanh    = [](double x) { return (std::exp(x) - std::exp(-x)) / (std::exp(x) + std::exp(-x)); };
-    [[maybe_unused]] auto relu    = [](double x) { return std::max<double>(x, 0); };
-    [[maybe_unused]] auto lrelu   = [](double x) { return x > 0 ? x : x * 0.001;  };
-
-    Eigen::MatrixXd H = input;
-    for (size_t i=0; i<m_weights.size(); ++i)
-    {
-        H = H * m_weights[i] + m_biases[i];
-        // Apply activation function to hidden layers.
-        if (i < m_weights.size()-1)
-            H = H.unaryExpr([&](double x) { return tanh(x); });
-    }
-
-    // Apply sigmoid to outputs.
-    return H.unaryExpr([&](double x) { return sigmoid(x); });
-    // OPTIONAL: Alternatively, softmax can be applied to outputs.
-    // double sumExp = 0;
-    // H.unaryExpr([&](double x) { sumExp += std::exp(x); return x; });
-    // return H.unaryExpr([&](double x) { return std::exp(x) / sumExp; });
-}
-
-
 std::vector<double> FFNN::SerializeWeights()
 {
     return SerializeMatrices(m_weights);
@@ -290,4 +265,36 @@ bool FFNN::DeserializeMatrices(const std::vector<double> & vector, std::vector<E
     }
 
     return true;
+}
+
+
+Eigen::MatrixXd Sigmoid::Calculate(Eigen::MatrixXd & mat)
+{
+    return mat.unaryExpr([&](double x) { return 1.0 / (1.0 + std::exp(-x)); });
+}
+
+
+Eigen::MatrixXd Tanh::Calculate(Eigen::MatrixXd & mat)
+{
+    return mat.unaryExpr([&](double x) { return (std::exp(x) - std::exp(-x)) / (std::exp(x) + std::exp(-x)); });
+}
+
+
+Eigen::MatrixXd Relu::Calculate(Eigen::MatrixXd & mat)
+{
+    return mat.unaryExpr([&](double x) { return std::max<double>(x, 0); });
+}
+
+
+Eigen::MatrixXd LRelu::Calculate(Eigen::MatrixXd & mat)
+{
+    return mat.unaryExpr([&](double x) { return x > 0 ? x : x * 0.001; });
+}
+
+
+Eigen::MatrixXd Softmax::Calculate(Eigen::MatrixXd & mat)
+{
+    double sumExp = 0;
+    mat = mat.unaryExpr([&](double x) { sumExp += std::exp(x); return x; });
+    return mat.unaryExpr([&](double x) { return std::exp(x) / sumExp; });
 }
