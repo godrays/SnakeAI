@@ -16,49 +16,68 @@
 #include <random>
 
 
-// Simple multi-layer feed-forward neural network.
+// Activation Type
+enum class ActivationType : int64_t
+{
+    kActivationTypeInvalid   = 0,
+    kActivationTypeSigmoid   = 1,
+    kActivationTypeTanh      = 2,
+    kActivationTypeReLU      = 3,
+    kActivationTypeLeakyReLU = 4,
+    kActivationTypeSoftmax   = 5,
+};
+
+
+// Activation Base Class
+class ActivationBase
+{
+public:
+    // Destructor
+    virtual ~ActivationBase() = default;
+
+    virtual Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat) = 0;
+
+    // Returns activation type
+    ActivationType GetType() { return m_type; }
+
+protected:
+    ActivationType  m_type{ActivationType::kActivationTypeInvalid};
+};
+
+
+// Simple multi-layer fully-connected feed-forward neural network.
 class FFNN
 {
 public:
-    // Constructors
+    // Constructor
     FFNN() = default;
 
-    explicit FFNN(const std::vector<int> & layers);
+    // Constructor
+    explicit FFNN(const std::vector<int> & layers, const std::vector<ActivationType> & activations);
+
+    // Destructor
+    virtual ~FFNN();
 
     // Initializes layers.
-    bool Init(const std::vector<int> & layers);
+    void Init(const std::vector<int> & layers, const std::vector<ActivationType> & activations);
 
     // Makes prediction by using input data.
-    template<typename activationHiddenLayer, typename activationOutputLayer>
-    Eigen::MatrixXd Forward(const Eigen::MatrixXd & input)
-    {
-        Eigen::MatrixXd H = input;
-        for (size_t i=0; i<m_weights.size(); ++i)
-        {
-            H = H * m_weights[i] + m_biases[i];
-            // Apply activation to hidden layers.
-            if (i < m_weights.size()-1)
-                H = activationHiddenLayer::Calculate(H);
-        }
-
-        // Apply activation to outputs.
-        return activationOutputLayer::Calculate(H);
-    }
+    Eigen::MatrixXd Forward(const Eigen::MatrixXd & input);
 
     // Returns all weights as a single vector.
-    std::vector<double>  SerializeWeights();
+    std::vector<double> SerializeWeights();
 
     // Sets all weights from a vector.
     bool DeserializeWeights(const std::vector<double> & weightsVector);
 
     // Returns all biases as a single vector.
-    std::vector<double>  SerializeBiases();
+    std::vector<double> SerializeBiases();
 
     // Sets all biases from a vector.
     bool DeserializeBiases(const std::vector<double> & biasesVector);
 
     // Returns all parameters, weights + biases, as a single vector.
-    std::vector<double>  SerializeAllParameters();
+    std::vector<double> SerializeAllParameters();
 
     // Sets all parameters, weights + biases, from a vector.
     bool DeserializeAllParameters(const std::vector<double> & vector);
@@ -79,45 +98,68 @@ private:
     // Deserialize a vector into source matrices.
     bool DeserializeMatrices(const std::vector<double> & vector, std::vector<Eigen::MatrixXd> & matrices);
 
+    // Deletes all activations.
+    void DeleteActivations();
+
 private:
     std::vector<Eigen::MatrixXd>  m_weights;
     std::vector<Eigen::MatrixXd>  m_biases;
+    std::vector<ActivationBase*>  m_activations;
     std::mt19937                  m_rndEngine;
 };
 
 
 // Activation methods.
 
-class Sigmoid
+class Sigmoid : public ActivationBase
 {
 public:
-    static Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat);
+    Sigmoid() { m_type = ActivationType::kActivationTypeSigmoid; }
+    Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat) final;
 };
 
 
-class Tanh
+class Tanh : public ActivationBase
 {
 public:
-    static Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat);
+    Tanh() { m_type = ActivationType::kActivationTypeTanh; }
+    Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat) final;
 };
 
 
-class Relu
+class ReLU : public ActivationBase
 {
 public:
-    static Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat);
+    ReLU() { m_type = ActivationType::kActivationTypeReLU; }
+    Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat) final;
 };
 
 
-class LRelu
+class LeakyReLU : public ActivationBase
 {
 public:
-    static Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat);
+    LeakyReLU() { m_type = ActivationType::kActivationTypeLeakyReLU; }
+    Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat) final;
 };
 
 
-class Softmax
+class Softmax : public ActivationBase
 {
 public:
-    static Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat);
+    Softmax() { m_type = ActivationType::kActivationTypeSoftmax; }
+    Eigen::MatrixXd Calculate(Eigen::MatrixXd & mat) final;
+};
+
+
+// Activation Factory
+
+class ActivationFactory
+{
+public:
+    // Creates and returns a new activation object.
+    static ActivationBase* Create(ActivationType type);
+
+private:
+    // Constructor to prevent creating a dynamic object.
+    ActivationFactory() = default;
 };

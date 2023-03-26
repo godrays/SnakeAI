@@ -207,7 +207,10 @@ void GACmd::TrainModel(const std::string & modelFilename)
     // First determine genetic vector size.
     int modelInputSize = static_cast<int>(SnakeGame::GetParameterSize());
     std::vector<int>  ffnnLayers{modelInputSize, modelInputSize, modelInputSize/2, 4};
-    FFNN  dummyNet(ffnnLayers);
+    std::vector<ActivationType> activations{ActivationType::kActivationTypeTanh,
+                                            ActivationType::kActivationTypeTanh,
+                                            ActivationType::kActivationTypeSigmoid};
+    FFNN  dummyNet(ffnnLayers, activations);
     auto geneticVectorSize = dummyNet.SerializeAllParameters().size();
 
     const std::size_t  populationSize    = 50;
@@ -224,7 +227,7 @@ void GACmd::TrainModel(const std::string & modelFilename)
     // This method will calculate fitness value for each individual.
     ga.SetFitnessFunc([&](const std::vector<double> & chromosome) -> double
     {
-        return SimulateSnakeGames(samplingSize, chromosome, ffnnLayers, rndSeed);
+        return SimulateSnakeGames(samplingSize, chromosome, ffnnLayers, activations, rndSeed);
     });
 
     // This method will generate random item (genes) for a genetic vector/material (chromosome).
@@ -247,7 +250,7 @@ void GACmd::TrainModel(const std::string & modelFilename)
         // Save the best individual.
         if (fitness > bestFitness)
         {
-            FFNN  ffnn(ffnnLayers);
+            FFNN  ffnn(ffnnLayers, activations);
             // Set genes vector (weights and biases) coming from genetic algorithm.
             ffnn.DeserializeAllParameters(ga.GetBestIndividual().GetValue());
             ffnn.Save(modelFilename);
@@ -268,7 +271,7 @@ void GACmd::CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn) const
     auto inputs = Eigen::Map<Eigen::RowVectorXd>(modelInputs.data(), modelInputs.size());
 
     // Make prediction and get new snake directions as model outputs.
-    auto outputs = ffnn.Forward<Tanh, Sigmoid>(inputs);
+    auto outputs = ffnn.Forward(inputs);
 
     // Determine the best direction from model outputs. The highest value should be the new direction.
     snakeGame.SetDirection(DetermineSnakeDirection(outputs));
@@ -326,10 +329,11 @@ void GACmd::DrawGameBoard(sf::Text& text)
 
 
 double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<double> & value,
-                                 const std::vector<int> & ffnnLayers, int rndSeed)
+                                 const std::vector<int> & ffnnLayers, const std::vector<ActivationType> & activations,
+                                 int rndSeed)
 {
     // Setup a neural network.
-    FFNN  ffnn(ffnnLayers);
+    FFNN  ffnn(ffnnLayers, activations);
     // Set weights and biases coming from genetic algorithm.
     ffnn.DeserializeAllParameters(value);   // value = genetic material vector = chromosome
 
@@ -352,7 +356,7 @@ double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<dou
             auto inputs = Eigen::Map<Eigen::RowVectorXd>(modelInputs.data(), modelInputs.size());
 
             // Make prediction and get new snake directions as model outputs.
-            auto outputs = ffnn.Forward<Tanh, Sigmoid>(inputs);
+            auto outputs = ffnn.Forward(inputs);
 
             // Determine the best direction from model outputs. The highest value should be the new direction.
             snakeGame.SetDirection(DetermineSnakeDirection(outputs));

@@ -17,19 +17,26 @@
 #include <fstream>
 
 
-FFNN::FFNN(const std::vector<int> & layers)
+FFNN::FFNN(const std::vector<int> & layers, const std::vector<ActivationType> & activations)
 {
-    Init(layers);
+    Init(layers, activations);
 }
 
 
-bool FFNN::Init(const std::vector<int> & layers)
+FFNN::~FFNN()
 {
-    if (layers.size() < 3)
+    DeleteActivations();
+}
+
+
+void FFNN::Init(const std::vector<int> & layers, const std::vector<ActivationType> & activations)
+{
+    if (layers.size() < 3 || activations.size() < 2 || layers.size() - 1 != activations.size())
     {
-        // Needs at least two layers.
-        return false;
+        throw std::runtime_error("Layer configuration is not correct");
     }
+
+    DeleteActivations();
 
     std::random_device  rndDev;
     m_rndEngine.seed(rndDev());
@@ -40,14 +47,29 @@ bool FFNN::Init(const std::vector<int> & layers)
     };
     auto randGen = [&getRandomNumber](){ return getRandomNumber(-1, 1); };
 
+    // Create weights and biases for all layers except input layer.
     for (size_t i=0; i<layers.size()-1; ++i)
     {
         // NullaryExpr() creates NxM matrix and uses randGen() to assign random values.
         m_weights.emplace_back(Eigen::MatrixXd::NullaryExpr(layers[i], layers[i+1], randGen));
         m_biases.emplace_back(Eigen::MatrixXd::NullaryExpr(1, layers[i+1], randGen));
+        // Create activation object per hidden layer and the output later (the last layer).
+        m_activations.emplace_back(ActivationFactory::Create(activations[i]));
+    }
+}
+
+
+Eigen::MatrixXd FFNN::Forward(const Eigen::MatrixXd & input)
+{
+    Eigen::MatrixXd H = input;
+    for (size_t i=0; i<m_weights.size(); ++i)
+    {
+        H = H * m_weights[i] + m_biases[i];
+        // Apply activation.
+        H = m_activations[i]->Calculate(H);
     }
 
-    return true;
+    return H ;
 }
 
 
@@ -137,6 +159,12 @@ bool FFNN::Save(const std::string & filename)
         WriteInt64(weight.cols());
     }
 
+    // Write layers activation types.
+    for (const auto activation : m_activations)
+    {
+        WriteInt64(static_cast<int64_t>(activation->GetType()));
+    }
+
     // Write all weights matrices.
     for (const auto & weight : m_weights)
     {
@@ -195,7 +223,16 @@ bool FFNN::Load(const std::string & filename)
         layers.emplace_back(hiddenLayerSize);
     }
 
-    Init(layers);
+    // Read activation types.
+    std::vector<ActivationType> layerActivations;
+    for (int64_t i=0; i<numHiddenLayers; ++i)
+    {
+        int64_t activationType;
+        ReadInt64(activationType);
+        layerActivations.emplace_back(static_cast<ActivationType>(activationType));
+    }
+
+    Init(layers, layerActivations);
 
     // Read all weights matrices.
     for (auto & weight : m_weights)
@@ -215,13 +252,13 @@ bool FFNN::Load(const std::string & filename)
 
 void FFNN::PrintAll()
 {
-    // Read all weights matrices.
+    // Print all weights matrices.
     for (const auto & weight : m_weights)
     {
         std::cout << "Weight(" << weight.rows() << "," << weight.cols() << "):" << std::endl << weight << std::endl;
     }
 
-    // Read all bias matrices.
+    // Print all bias matrices.
     for (auto & bias : m_biases)
     {
         std::cout << "Bias(" << bias.rows() << "," << bias.cols() << "):" << std::endl << bias << std::endl;
@@ -268,6 +305,16 @@ bool FFNN::DeserializeMatrices(const std::vector<double> & vector, std::vector<E
 }
 
 
+void FFNN::DeleteActivations()
+{
+    for (auto activation : m_activations)
+    {
+        delete activation;
+    }
+    m_activations.clear();
+}
+
+
 Eigen::MatrixXd Sigmoid::Calculate(Eigen::MatrixXd & mat)
 {
     return mat.unaryExpr([&](double x) { return 1.0 / (1.0 + std::exp(-x)); });
@@ -280,13 +327,13 @@ Eigen::MatrixXd Tanh::Calculate(Eigen::MatrixXd & mat)
 }
 
 
-Eigen::MatrixXd Relu::Calculate(Eigen::MatrixXd & mat)
+Eigen::MatrixXd ReLU::Calculate(Eigen::MatrixXd & mat)
 {
     return mat.unaryExpr([&](double x) { return std::max<double>(x, 0); });
 }
 
 
-Eigen::MatrixXd LRelu::Calculate(Eigen::MatrixXd & mat)
+Eigen::MatrixXd LeakyReLU::Calculate(Eigen::MatrixXd & mat)
 {
     return mat.unaryExpr([&](double x) { return x > 0 ? x : x * 0.001; });
 }
@@ -297,4 +344,27 @@ Eigen::MatrixXd Softmax::Calculate(Eigen::MatrixXd & mat)
     double sumExp = 0;
     mat = mat.unaryExpr([&](double x) { sumExp += std::exp(x); return x; });
     return mat.unaryExpr([&](double x) { return std::exp(x) / sumExp; });
+}
+
+
+// ActivationFactory Implementations
+
+ActivationBase* ActivationFactory::Create(ActivationType type)
+{
+    ActivationBase* activation = nullptr;
+
+    switch (type)
+    {
+        case ActivationType::kActivationTypeSigmoid:    activation = new Sigmoid();      break;
+        case ActivationType::kActivationTypeTanh:       activation = new Tanh();         break;
+        case ActivationType::kActivationTypeReLU:       activation = new ReLU();         break;
+        case ActivationType::kActivationTypeLeakyReLU:  activation = new LeakyReLU();    break;
+        case ActivationType::kActivationTypeSoftmax:    activation = new Softmax();      break;
+        case ActivationType::kActivationTypeInvalid:
+        default:
+            throw std::runtime_error("Unknown activation type encountered when creating an activation object.");
+            break;
+    }
+
+    return activation;
 }
