@@ -204,14 +204,7 @@ void GACmd::TrainModel(const std::string & modelFilename)
     std::mt19937 rndEngine(rndDev());
     int rndSeed = static_cast<int>(rndDev());
 
-    // First determine genetic vector size.
-    int modelInputSize = static_cast<int>(SnakeGame::GetParameterSize());
-    std::vector<int>  ffnnLayers{modelInputSize, modelInputSize, modelInputSize/2, 4};
-    std::vector<ActivationType> activations{ActivationType::kActivationTypeTanh,
-                                            ActivationType::kActivationTypeTanh,
-                                            ActivationType::kActivationTypeSigmoid};
-    FFNN  dummyNet(ffnnLayers, activations);
-    auto geneticVectorSize = dummyNet.SerializeAllParameters().size();
+    auto geneticVectorSize = CreateFFNN().SerializeAllParameters().size();
 
     const std::size_t  populationSize    = 50;
     const std::size_t  parentRatio       = 50;      // Percent
@@ -227,7 +220,7 @@ void GACmd::TrainModel(const std::string & modelFilename)
     // This method will calculate fitness value for each individual.
     ga.SetFitnessFunc([&](const std::vector<double> & chromosome) -> double
     {
-        return SimulateSnakeGames(samplingSize, chromosome, ffnnLayers, activations, rndSeed);
+        return SimulateSnakeGames(samplingSize, chromosome, rndSeed);
     });
 
     // This method will generate random item (genes) for a genetic vector/material (chromosome).
@@ -250,7 +243,7 @@ void GACmd::TrainModel(const std::string & modelFilename)
         // Save the best individual.
         if (fitness > bestFitness)
         {
-            FFNN  ffnn(ffnnLayers, activations);
+            auto ffnn = CreateFFNN();
             // Set genes vector (weights and biases) coming from genetic algorithm.
             ffnn.DeserializeAllParameters(ga.GetBestIndividual().GetValue());
             ffnn.Save(modelFilename);
@@ -261,6 +254,21 @@ void GACmd::TrainModel(const std::string & modelFilename)
         std::cout << "Generation: " << ga.GetGeneration() << "  Fitness: " << bestFitness << "\r";
         ga.CreateNextPopulation();
     }
+}
+
+
+FFNN GACmd::CreateFFNN()
+{
+    // First determine genetic vector size.
+    int modelInputSize = static_cast<int>(SnakeGame::GetParameterSize());
+
+    std::vector<int>  ffnnLayers{modelInputSize, modelInputSize, modelInputSize/2, 4};
+
+    std::vector<ActivationType> activations{ActivationType::kActivationTypeTanh,
+                                            ActivationType::kActivationTypeTanh,
+                                            ActivationType::kActivationTypeSigmoid};
+
+    return FFNN(ffnnLayers, activations);
 }
 
 
@@ -328,14 +336,13 @@ void GACmd::DrawGameBoard(sf::Text& text)
 }
 
 
-double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<double> & value,
-                                 const std::vector<int> & ffnnLayers, const std::vector<ActivationType> & activations,
-                                 int rndSeed)
+double GACmd::SimulateSnakeGames(std::size_t samplingSize, const std::vector<double> & genesVector, int rndSeed)
 {
     // Setup a neural network.
-    FFNN  ffnn(ffnnLayers, activations);
+    auto ffnn = CreateFFNN();
+
     // Set weights and biases coming from genetic algorithm.
-    ffnn.DeserializeAllParameters(value);   // value = genetic material vector = chromosome
+    ffnn.DeserializeAllParameters(genesVector);   // value = genetic material vector = chromosome
 
     // Create a new snake game.
     SnakeGame snakeGame(m_boardWidth, m_boardHeight, rndSeed);

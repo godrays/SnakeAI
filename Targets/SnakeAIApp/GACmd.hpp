@@ -43,9 +43,11 @@ protected:
 
     void PlayModel(const std::string & modelFilename);
     void TrainModel(const std::string & modelFilename);
-    double SimulateSnakeGames(std::size_t samplingSize, const std::vector<double> & value,
-                              const std::vector<int> & ffnnLayers, const std::vector<ActivationType> & activations,
-                              int rndSeed);
+
+    // Creates and returns a pre-configured FFNN object.
+    FFNN CreateFFNN();
+
+    double SimulateSnakeGames(std::size_t samplingSize, const std::vector<double> & genesVector, int rndSeed);
 
     // Calculates game's next step.
     void CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn) const;
