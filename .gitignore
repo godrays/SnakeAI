@@ -15,6 +15,10 @@ cmake-build*
 build
 installed
 
+# External Files
+Externals/*
+!Externals/*.sh     # Except .sh files
+
 #CLion
 .idea
 

@@ -251,7 +251,7 @@ void GACmd::TrainModel(const std::string & modelFilename)
             bestFitness = fitness;
         }
 
-        std::cout << "Generation: " << ga.GetGeneration() << "  Fitness: " << bestFitness << "\r";
+        std::cout << "Generation: " << ga.GetGeneration() << "  Fitness: " << bestFitness << "\n";
         ga.CreateNextPopulation();
     }
 }

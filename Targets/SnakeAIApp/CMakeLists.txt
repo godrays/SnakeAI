@@ -24,6 +24,8 @@ if (APPLE)
 #            "-framework AudioUnit"
             bz2_static
             z
+            brotlidec
+            brotlicommon
             freetype
             docopt
 #            sfml-audio-s
@@ -38,6 +40,8 @@ elseif (LINUX)
             dl pthread GL
             bz2_static
             z
+            brotlidec
+            brotlicommon
             freetype
             docopt
 #            sfml-audio-s

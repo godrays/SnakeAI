@@ -11,7 +11,7 @@ cmake_minimum_required(VERSION 3.24)
 
 project(SnakeAI)
 
-set(CMAKE_CONFIGURATION_TYPES "CCov;ASan;TSan" CACHE STRING "" FORCE)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;CCov;ASan;TSan" CACHE STRING "" FORCE)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -29,8 +29,9 @@ set(CMAKE_CXX_FLAGS_TSAN "${CMAKE_CXX_FLAGS} -g -O2 -fsanitize=thread -fPIE")
 
 # Include folders
 include_directories(Externals/sfml/2.6.x/installed/include)
+include_directories(Externals/brotli/1.1.0/installed/include)
 include_directories(Externals/freetype/2-12-1/installed/include)
-include_directories(Externals/zlib/1.2.13/installed/include)
+include_directories(Externals/zlib/1.3.1/installed/include)
 include_directories(Externals/bzip2/master/installed/include)
 include_directories(Externals/eigen/3.4.0/installed/include/eigen3)
 include_directories(Externals/docopt/0.6.3/installed/include)
@@ -38,8 +39,9 @@ include_directories(Targets/SnakeGameLib)
 
 # Lib folders
 link_directories(Externals/sfml/2.6.x/installed/lib)
+link_directories(Externals/brotli/1.1.0/installed/lib)
 link_directories(Externals/freetype/2-12-1/installed/lib)
-link_directories(Externals/zlib/1.2.13/installed/lib)
+link_directories(Externals/zlib/1.3.1/installed/lib)
 link_directories(Externals/bzip2/master/installed/lib)
 link_directories(Externals/docopt/0.6.3/installed/lib)
 

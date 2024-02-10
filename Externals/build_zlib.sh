@@ -5,7 +5,7 @@
 #
 
 lib_name=zlib
-lib_version=1.2.13
+lib_version=1.3.1
 lib_url=https://github.com/madler/zlib.git
 
 pushd .
