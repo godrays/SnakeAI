@@ -236,6 +236,8 @@ void GACmd::TrainModel(const std::string & modelFilename)
 
     double bestFitness = -std::numeric_limits<double>::max();
 
+    std::cout << "Total Model Parameters: " << geneticVectorSize << "\n";
+
     while (ga.GetGeneration() < m_maxGeneration)
     {
         double fitness = ga.GetBestIndividual().GetFitness();
