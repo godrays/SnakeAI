@@ -1,8 +1,8 @@
 # Project Build Instructions
 
-Follow the following steps to build the project and make it deployment ready.
+Follow these steps to build the project and make it deployment-ready.
 
-Note: Currently support only macOS and tested on Sonoma.
+Currently, it supports only macOS and has been tested on Sonoma.
 
 ---
 
@@ -23,6 +23,25 @@ This step will build all binaries and deploy into a specific folder.
 ./build.sh release product-rel
 ```
 
-After the successful build, all target binaries will be deployed into the product-rel folder.
+After a successful build, all target binaries will be deployed into the product-rel folder.
 
 Note: Run the build.sh file without parameters to see all options.
+
+# How to Train and Play SnakeAI
+
+Follow the following steps to train and play model.
+
+### Step 1: Train
+
+```bash
+cd product-rel
+./SnakeAIApp ga train --modelfile=snakeai.mdl --maxGen=500
+```
+
+### Step 2: Play
+
+```bash
+./SnakeAIApp ga play --modelfile=snakeai.mdl
+```
+
+Note: Run SnakeAIApp without any parameters to see all command line options.
