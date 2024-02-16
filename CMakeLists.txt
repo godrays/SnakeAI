@@ -20,6 +20,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# Set compiler flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors -Wall -Wextra")    # Common parameters for debug and release
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
@@ -27,25 +28,43 @@ set(CMAKE_CXX_FLAGS_CCOV "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage
 set(CMAKE_CXX_FLAGS_ASAN "${CMAKE_CXX_FLAGS} -g -O1 -fsanitize=address -fno-omit-frame-pointer")
 set(CMAKE_CXX_FLAGS_TSAN "${CMAKE_CXX_FLAGS} -g -O2 -fsanitize=thread -fPIE")
 
+# Set external library versions
+set(SFML_VERSION 2.6.x)
+set(BROTLI_VERSION 1.1.0)
+set(FREETYPE_VERSION 2-12-1)
+set(ZLIB_VERSION 1.3.1)
+set(BZIP2_VERSION master)
+set(EIGEN_VERSION 3.4.0)
+set(DOCOPT_VERSION 0.6.3)
+
 # Include folders
-include_directories(Externals/sfml/2.6.x/installed/include)
-include_directories(Externals/brotli/1.1.0/installed/include)
-include_directories(Externals/freetype/2-12-1/installed/include)
-include_directories(Externals/zlib/1.3.1/installed/include)
-include_directories(Externals/bzip2/master/installed/include)
-include_directories(Externals/eigen/3.4.0/installed/include/eigen3)
-include_directories(Externals/docopt/0.6.3/installed/include)
+include_directories(Externals/sfml/${SFML_VERSION}/installed/include)
+include_directories(Externals/brotli/${BROTLI_VERSION}/installed/include)
+include_directories(Externals/freetype/${FREETYPE_VERSION}/installed/include)
+include_directories(Externals/zlib/${ZLIB_VERSION}/installed/include)
+include_directories(Externals/bzip2/${BZIP2_VERSION}/installed/include)
+include_directories(Externals/eigen/${EIGEN_VERSION}/installed/include/eigen3)
+include_directories(Externals/docopt/${DOCOPT_VERSION}/installed/include)
 include_directories(Targets/SnakeGameLib)
 
 # Lib folders
-link_directories(Externals/sfml/2.6.x/installed/lib)
-link_directories(Externals/brotli/1.1.0/installed/lib)
-link_directories(Externals/freetype/2-12-1/installed/lib)
-link_directories(Externals/zlib/1.3.1/installed/lib)
-link_directories(Externals/bzip2/master/installed/lib)
-link_directories(Externals/docopt/0.6.3/installed/lib)
-
+link_directories(Externals/sfml/${SFML_VERSION}/installed/lib)
+link_directories(Externals/brotli/${BROTLI_VERSION}/installed/lib)
+link_directories(Externals/freetype/${FREETYPE_VERSION}/installed/lib)
+link_directories(Externals/zlib/${ZLIB_VERSION}/installed/lib)
+link_directories(Externals/bzip2/${BZIP2_VERSION}/installed/lib)
+link_directories(Externals/docopt/${DOCOPT_VERSION}/installed/lib)
 
 # Target folders
 add_subdirectory(Targets/SnakeGameLib)
 add_subdirectory(Targets/SnakeAIApp)
+
+# TODO: Build static zlib
+# Install common external files
+install(FILES
+        "${CMAKE_SOURCE_DIR}/Externals/zlib/${ZLIB_VERSION}/installed/lib/libz.1.dylib"
+        "${CMAKE_SOURCE_DIR}/Externals/zlib/${ZLIB_VERSION}/installed/lib/libz.${ZLIB_VERSION}.dylib"
+        "${CMAKE_SOURCE_DIR}/Externals/docopt/${DOCOPT_VERSION}/installed/lib/libdocopt.0.dylib"
+        "${CMAKE_SOURCE_DIR}/Externals/docopt/${DOCOPT_VERSION}/installed/lib/libdocopt.0.6.2.dylib"
+        DESTINATION .
+)

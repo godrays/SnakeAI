@@ -13,6 +13,7 @@
 #Generated Files
 cmake-build*
 build
+build-*
 installed
 
 # External Files

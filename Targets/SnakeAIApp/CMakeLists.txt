@@ -7,14 +7,16 @@
 #  trade secret or copyright law. Dissemination of this information or reproduction of this
 #  material is strictly forbidden unless prior written permission is obtained from Arkin Terli.
 
-add_executable(SnakeAIApp
+set(TARGET_NAME SnakeAIApp)
+
+add_executable(${TARGET_NAME}
         main.cpp
         NoAICmd.cpp
         GACmd.cpp
         )
 
 if (APPLE)
-    target_link_libraries(SnakeAIApp PRIVATE
+    target_link_libraries(${TARGET_NAME} PRIVATE
             "-ObjC"
             "-framework Carbon"
             "-framework CoreFoundation"
@@ -36,7 +38,7 @@ if (APPLE)
             SnakeGameLib
             )
 elseif (LINUX)
-    target_link_libraries(SnakeAIApp
+    target_link_libraries(${TARGET_NAME}
             dl pthread GL
             bz2_static
             z
@@ -52,3 +54,8 @@ elseif (LINUX)
             SnakeGameLib
             )
 endif()
+
+
+install(TARGETS ${TARGET_NAME}
+        RUNTIME DESTINATION .
+)
