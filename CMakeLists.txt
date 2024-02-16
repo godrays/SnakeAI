@@ -58,13 +58,3 @@ link_directories(Externals/docopt/${DOCOPT_VERSION}/installed/lib)
 # Target folders
 add_subdirectory(Targets/SnakeGameLib)
 add_subdirectory(Targets/SnakeAIApp)
-
-# TODO: Build static zlib
-# Install common external files
-install(FILES
-        "${CMAKE_SOURCE_DIR}/Externals/zlib/${ZLIB_VERSION}/installed/lib/libz.1.dylib"
-        "${CMAKE_SOURCE_DIR}/Externals/zlib/${ZLIB_VERSION}/installed/lib/libz.${ZLIB_VERSION}.dylib"
-        "${CMAKE_SOURCE_DIR}/Externals/docopt/${DOCOPT_VERSION}/installed/lib/libdocopt.0.dylib"
-        "${CMAKE_SOURCE_DIR}/Externals/docopt/${DOCOPT_VERSION}/installed/lib/libdocopt.0.6.2.dylib"
-        DESTINATION .
-)

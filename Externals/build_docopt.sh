@@ -22,7 +22,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../installed
 cmake --build . --target install -- -j `nproc --all`
 
 cd ..
+rm -rf installed/lib/*.dylib    # Remove dynamic libs to force linker to choose static lib only.
 rm -rf .git .gitattributes .github .gitignore build
 
 popd
-
