@@ -7,6 +7,7 @@
 lib_name=brotli
 lib_version=1.1.0
 lib_url=https://github.com/google/brotli.git
+logical_core_count=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
 
 pushd .
 
@@ -20,7 +21,7 @@ mkdir build
 cd build
 
 cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=FALSE -DCMAKE_INSTALL_PREFIX=../installed
-cmake --build . --target install -- -j `nproc --all`
+cmake --build . --target install -- -j $logical_logical_core_count
 
 cd ..
 rm -rf .git .gitattributes .github .gitignore build

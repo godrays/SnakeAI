@@ -7,6 +7,7 @@
 lib_name=docopt
 lib_version=0.6.3
 lib_url=https://github.com/docopt/docopt.cpp.git
+logical_core_count=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
 
 pushd .
 
@@ -19,7 +20,7 @@ mkdir build
 cd build
 
 cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../installed
-cmake --build . --target install -- -j `nproc --all`
+cmake --build . --target install -- -j $logical_core_count
 
 cd ..
 rm -rf installed/lib/*.dylib    # Remove dynamic libs to force linker to choose static lib only.

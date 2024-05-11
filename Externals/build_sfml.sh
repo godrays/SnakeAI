@@ -7,6 +7,7 @@
 lib_name=sfml
 lib_version=2.6.x
 lib_url=https://github.com/SFML/SFML.git
+logical_core_count=$(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
 
 pushd .
 
@@ -20,7 +21,7 @@ mkdir build
 cd build
 
 cmake .. -DCMAKE_BUILD_TYPE=Release -DSFML_BUILD_FRAMEWORKS=FALSE -DBUILD_SHARED_LIBS=FALSE -DCMAKE_INSTALL_PREFIX=../installed
-cmake --build . --target install -- -j `nproc --all`
+cmake --build . --target install -- -j $logical_core_count
 
 cd ..
 rm -rf .git .gitattributes .github .gitignore build
