@@ -68,6 +68,13 @@ private:
     int m_boardWidth{10};
     int m_boardHeight{10};
     int m_blockSize{25};
+
+    std::size_t m_gaPopulationSize{50};
+    std::size_t m_gaParentRatio{50};
+    std::size_t m_gaMutateProb{1};
+    std::size_t m_gaTransferRatio{15};
+    std::size_t m_gaCrossover{50};
+    std::size_t m_gaSamplingSize{2000};
     std::size_t m_maxGeneration{1000};
 
     sf::RenderWindow   m_window;

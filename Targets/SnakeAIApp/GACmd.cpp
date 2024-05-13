@@ -35,7 +35,10 @@ void GACmd::Run(int argc, const char *argv[])
 
     Usage:
         SnakeAIApp ga play  --modelfile=<name> [--bw=<number> --bh=<number>] [--bls=<number>]
-        SnakeAIApp ga train --modelfile=<name> [--bw=<number> --bh=<number>] [--bls=<number>] [--maxGen=<number>]
+        SnakeAIApp ga train --modelfile=<name> [--bw=<number> --bh=<number>] [--bls=<number>]
+                                               [--ps=<number>] [--pr=<number>] [--mp=<number>]
+                                               [--tr=<number>] [--cr=<number>] [--sc=<number>]
+                                               [--maxGen=<number>]
 
     Options:
 
@@ -45,6 +48,12 @@ void GACmd::Run(int argc, const char *argv[])
         --bh=<number>           Board height in block units. [Default: 10]
         --bls=<number>          Block size in pixel units.   [Default: 25]
 
+        --ps=number             Population size.            [Default: 50]
+        --pr=number             Parent ratio (%).           [Default: 50]
+        --mp=number             Mutate probability (%).     [Default: 1]
+        --tr=number             Transfer ratio (%).         [Default: 15]
+        --cr=number             Crossover (%).              [Default: 50]
+        --sc=number             Model sampling count per generation. [Default: 2000]
         --maxGen=number         Maximum number of generation for training. [Default: 1000]
     )";
 
@@ -92,11 +101,17 @@ bool GACmd::ValidateArguments(std::map <std::string, docopt::value>& args, const
         return true;
     };
 
-    // VALIDATE REQUIRED ARGUMENTS
+    // VALIDATE ARGUMENTS
 
     if (!CheckRangeLong("--bw",  10, 100) ||
         !CheckRangeLong("--bh",  10, 100) ||
         !CheckRangeLong("--bls", 10, 100) ||
+        !CheckRangeLong("--ps",  10, 1000000) ||
+        !CheckRangeLong("--pr",  0, 100)  ||
+        !CheckRangeLong("--mr",  0, 100)  ||
+        !CheckRangeLong("--tr",  0, 100)  ||
+        !CheckRangeLong("--cr",  0, 100)  ||
+        !CheckRangeLong("--sc",  1, 1000000)  ||
         !CheckRangeLong("--maxGen", 1, 1000000))
     {
         return false;
@@ -120,6 +135,12 @@ void GACmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
     if (args["--bw"])  m_boardWidth  = args["--bw"].asLong();
     if (args["--bh"])  m_boardHeight = args["--bh"].asLong();
     if (args["--bls"]) m_blockSize   = args["--bls"].asLong();
+    if (args["--ps"])  m_gaPopulationSize = args["--ps"].asLong();
+    if (args["--pr"])  m_gaParentRatio    = args["--pr"].asLong();
+    if (args["--mp"])  m_gaMutateProb     = args["--mp"].asLong();
+    if (args["--tr"])  m_gaTransferRatio  = args["--tr"].asLong();
+    if (args["--cr"])  m_gaCrossover      = args["--cr"].asLong();
+    if (args["--sc"])  m_gaSamplingSize   = args["--sc"].asLong();
     if (args["--maxGen"]) m_maxGeneration = args["--maxGen"].asLong();
 
     if (args["play"].asBool())
@@ -206,21 +227,14 @@ void GACmd::TrainModel(const std::string & modelFilename)
 
     auto geneticVectorSize = CreateFFNN().SerializeAllParameters().size();
 
-    const std::size_t  populationSize    = 50;
-    const std::size_t  parentRatio       = 50;      // Percent
-    const std::size_t  mutateProbability = 1;       // Percent
-    const std::size_t  transferRatio     = 15;      // Percent
-    const std::size_t  crossover         = 50;      // Percent
-    const std::size_t  samplingSize      = 2000;    // Game sampling size per individual per generation.
-
     // Create genetic algorithm to search best weights and biases for a neural network.
-    ga::GeneticAlgorithm<double>  ga(populationSize, parentRatio, mutateProbability, transferRatio, crossover,
+    ga::GeneticAlgorithm<double>  ga(m_gaPopulationSize, m_gaParentRatio, m_gaMutateProb, m_gaTransferRatio, m_gaCrossover,
                                      geneticVectorSize);
 
     // This method will calculate fitness value for each individual.
     ga.SetFitnessFunc([&](const std::vector<double> & chromosome) -> double
     {
-        return SimulateSnakeGames(samplingSize, chromosome, rndSeed);
+        return SimulateSnakeGames(m_gaSamplingSize, chromosome, rndSeed);
     });
 
     // This method will generate random item (genes) for a genetic vector/material (chromosome).
