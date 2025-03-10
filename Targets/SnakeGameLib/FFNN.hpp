@@ -11,7 +11,7 @@
 
 // Project includes
 // External includes
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 // System includes
 #include <random>
 

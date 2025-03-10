@@ -61,8 +61,7 @@ Follow the following steps to train and play model.
 ### Step 1: Train
 
 ```bash
-cd product-rel
-./SnakeAIApp ga train --modelfile=snakeai.mdl --maxGen=500
+$ SnakeAIApp ga train --modelfile=snakeai.mdl --maxGen=500
 ```
 
 The example command above sets the maximum generation count to 500, which is fairly enough. A well-trained model usually reaches ~52,000 fitness score for the default game board dimensions. When you set the board dimensions higher, you can expect to reach a higher fitness score during the training.
@@ -72,7 +71,7 @@ Run `SnakeAIApp ga train` to see all command line options.
 ### Step 2: Play
 
 ```bash
-./SnakeAIApp ga play --modelfile=snakeai.mdl
+$ SnakeAIApp ga play --modelfile=snakeai.mdl
 ```
 
 ---
@@ -83,26 +82,13 @@ Follow these steps to build the project and make it deployment-ready.
 
 Currently, it supports only macOS and has been tested on Sonoma.
 
-### Step 1: Build Externals
-
-This step will build external libraries.
-
 ```bash
-cd Externals
-./build_all.sh
-```
-
-### Step 2: Build Targets
-
-This step will build all binaries and deploy into a specific folder.
-
-```bash
-./build.sh release product-rel
+$ python build.py build release build-release product-rel
 ```
 
 After a successful build, all target binaries will be deployed into the product-rel folder.
 
-Note: Run the build.sh file without parameters to see all options.
+Note: Run the build.py file without parameters to see all options.
 
 ---
 

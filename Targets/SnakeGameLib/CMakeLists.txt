@@ -7,7 +7,11 @@
 #  trade secret or copyright law. Dissemination of this information or reproduction of this
 #  material is strictly forbidden unless prior written permission is obtained from Arkin Terli.
 
-add_library(SnakeGameLib STATIC
+set(TARGET_NAME SnakeGameLib)
+
+add_library(${TARGET_NAME} STATIC
         FFNN.cpp
         SnakeGame.cpp
-        )
+)
+
+add_dependencies(${TARGET_NAME} eigen_cpp)

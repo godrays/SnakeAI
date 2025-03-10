@@ -10,10 +10,12 @@
 set(TARGET_NAME SnakeAIApp)
 
 add_executable(${TARGET_NAME}
-        main.cpp
+        Main.cpp
         NoAICmd.cpp
         GACmd.cpp
-        )
+)
+
+add_dependencies(${TARGET_NAME} docopt_cpp freetype_cpp sfml_cpp)
 
 if (APPLE)
     target_link_libraries(${TARGET_NAME} PRIVATE
@@ -23,16 +25,12 @@ if (APPLE)
             "-framework OpenGL"
             "-framework Cocoa"
             "-framework IOKit"
-#            "-framework AudioUnit"
-            bz2_static
-            z
-            brotlidec
-            brotlicommon
-            freetype
+            "-framework AudioUnit"
             docopt
-#            sfml-audio-s
+            freetype
+            sfml-audio-s
             sfml-graphics-s
-#            sfml-network-s
+            sfml-network-s
             sfml-system-s
             sfml-window-s
             SnakeGameLib
@@ -40,15 +38,11 @@ if (APPLE)
 elseif (LINUX)
     target_link_libraries(${TARGET_NAME}
             dl pthread GL
-            bz2_static
-            z
-            brotlidec
-            brotlicommon
-            freetype
             docopt
-#            sfml-audio-s
+            freetype
+            sfml-audio-s
             sfml-graphics-s
-#            sfml-network-s
+            sfml-network-s
             sfml-system-s
             sfml-window-s
             SnakeGameLib
