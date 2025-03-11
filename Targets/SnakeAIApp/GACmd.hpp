@@ -9,6 +9,8 @@
 
 #pragma once
 
+#define SFML_STATIC
+
 // Project includes
 #include "BaseCmd.hpp"
 #include "SFML/Graphics.hpp"

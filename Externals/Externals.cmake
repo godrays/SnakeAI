@@ -129,6 +129,7 @@ set(EXTERNAL_SFML_CMAKE_ARGS
         # Project specific cmake args
         -DSFML_BUILD_FRAMEWORKS=FALSE
         -DBUILD_SHARED_LIBS=FALSE
+        -DSFML_USE_STATIC_STD_LIBS=TRUE
 )
 
 add_external_git_project(
