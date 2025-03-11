@@ -26,25 +26,27 @@ if (APPLE)
             "-framework Cocoa"
             "-framework IOKit"
             "-framework AudioUnit"
-            docopt
-            freetype
-            sfml-audio-s
             sfml-graphics-s
+            sfml-window-s
+            sfml-audio-s
             sfml-network-s
             sfml-system-s
-            sfml-window-s
+            docopt
+            freetype
             SnakeGameLib
             )
 elseif (LINUX)
     target_link_libraries(${TARGET_NAME}
-            dl pthread GL
-            docopt
-            freetype
-            sfml-audio-s
             sfml-graphics-s
+            sfml-window-s
+            sfml-audio-s
             sfml-network-s
             sfml-system-s
-            sfml-window-s
+            dl
+            pthread
+            GL
+            docopt
+            freetype
             SnakeGameLib
             )
 endif()
