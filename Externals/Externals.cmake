@@ -14,23 +14,29 @@ include(ExternalProject)
 # ---------------------------------------------------------------------------------
 
 # Builds and installs external git projects.
-function(add_external_git_project lib_name git_repository git_tag cmake_project_args external_bin_dir build_type)
-    message(STATUS "Configuring External Project: ${lib_name}")
+function(add_external_git_project)
+    set(options)
+    set(oneValueArgs NAME GIT_REPOSITORY GIT_TAG EXTERNALS_BIN_DIR BUILD_TYPE)
+    set(multiValueArgs CMAKE_ARGS)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    message(STATUS "Configuring External Project: ${ARG_NAME}")
+    set(lib_dir "${ARG_EXTERNALS_BIN_DIR}/${ARG_NAME}")
+
     ExternalProject_Add(
-            ${lib_name}
-            GIT_REPOSITORY ${git_repository}
-            GIT_TAG        ${git_tag}
-            PREFIX        "${external_bin_dir}/${lib_name}/prefix"
-            SOURCE_DIR    "${external_bin_dir}/${lib_name}/src"
-            STAMP_DIR     "${external_bin_dir}/${lib_name}/stamp"
-            BINARY_DIR    "${external_bin_dir}/${lib_name}/build"
-            INSTALL_DIR   "${external_bin_dir}/${lib_name}/install"
-            DOWNLOAD_DIR  "${external_bin_dir}/${lib_name}/download"
-            LOG_DIR       "${external_bin_dir}/${lib_name}/log"
-            CMAKE_ARGS
-            -DCMAKE_BUILD_TYPE=${build_type}
-            -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-            ${cmake_project_args}       # Project Build Options
+            ${ARG_NAME}
+            GIT_REPOSITORY  ${ARG_GIT_REPOSITORY}
+            GIT_TAG         ${ARG_GIT_TAG}
+            PREFIX          "${lib_dir}/prefix"
+            SOURCE_DIR      "${lib_dir}/src"
+            STAMP_DIR       "${lib_dir}/stamp"
+            BINARY_DIR      "${lib_dir}/build"
+            INSTALL_DIR     "${lib_dir}/install"
+            DOWNLOAD_DIR    "${lib_dir}/download"
+            LOG_DIR         "${lib_dir}/log"
+            CMAKE_ARGS      -DCMAKE_BUILD_TYPE=${ARG_BUILD_TYPE}
+                            -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+                            ${ARG_CMAKE_ARGS}
             LOG_CONFIGURE ON
             LOG_BUILD ON
             LOG_INSTALL ON
@@ -41,16 +47,25 @@ function(add_external_git_project lib_name git_repository git_tag cmake_project_
             LOG_OUTPUT_ON_FAILURE ON
             GIT_SUBMODULES_RECURSE ON
             GIT_PROGRESS OFF
-            BUILD_ALWAYS YES
+            GIT_SHALLOW  ON
+            BUILD_ALWAYS  ON
     )
-    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${external_bin_dir}/${lib_name}")
-    include_directories(${external_bin_dir}/${lib_name}/install/include)
-    link_directories(${external_bin_dir}/${lib_name}/install/lib)
+
+    # Clean external lib dir when cleaning the build.
+    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${lib_dir}")
+
+    file(MAKE_DIRECTORY "${lib_dir}/install/include" "${lib_dir}/install/lib")
+
+    include_directories(${lib_dir}/install/include)
+    link_directories(${lib_dir}/install/lib)
 endfunction()
 
 # ---------------------------------------------------------------------------------
 # COMMON SETTINGS
 # ---------------------------------------------------------------------------------
+
+# Externals build and install folder.
+set(EXTERNALS_BINARY_DIR "${CMAKE_BINARY_DIR}/Externals")
 
 # Common cmake project settings for the external projects.
 set(EXTERNAL_COMMON_CMAKE_ARGS
@@ -62,78 +77,64 @@ set(EXTERNAL_COMMON_CMAKE_ARGS
         -DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}
 )
 
-# Externals build and install folder.
-set(EXTERNALS_BINARY_DIR "${CMAKE_BINARY_DIR}/Externals")
-
 # ---------------------------------------------------------------------------------
 # DOCOPT CPP
 # ---------------------------------------------------------------------------------
-set(EXTERNAL_DOCOPT_CMAKE_ARGS
-        ${EXTERNAL_COMMON_CMAKE_ARGS}
-        # Project specific cmake args
-        -DBUILD_SHARED_LIBS=OFF
-)
 
 add_external_git_project(
-        "docopt_cpp"
-        "https://github.com/docopt/docopt.cpp.git"
-        "${EXTERNAL_DOCOPT_VERSION}"
-        "${EXTERNAL_DOCOPT_CMAKE_ARGS}"
-        "${EXTERNALS_BINARY_DIR}"
-        "Release"
+        NAME                docopt_cpp
+        GIT_REPOSITORY      https://github.com/docopt/docopt.cpp.git
+        GIT_TAG             ${EXTERNAL_DOCOPT_VERSION}
+        CMAKE_ARGS          ${EXTERNAL_COMMON_CMAKE_ARGS}
+                            -DBUILD_SHARED_LIBS=OFF
+        EXTERNALS_BIN_DIR   ${EXTERNALS_BINARY_DIR}
+        BUILD_TYPE          Release
 )
 
 # ---------------------------------------------------------------------------------
 # EIGEN CPP
 # ---------------------------------------------------------------------------------
+
 add_external_git_project(
-        "eigen_cpp"
-        "https://github.com/live-clones/eigen.git"
-        "${EXTERNAL_EIGEN_VERSION}"
-        "${EXTERNAL_COMMON_CMAKE_ARGS}"
-        "${EXTERNALS_BINARY_DIR}"
-        "Release"
+        NAME                eigen_cpp
+        GIT_REPOSITORY      https://github.com/live-clones/eigen.git
+        GIT_TAG             ${EXTERNAL_EIGEN_VERSION}
+        CMAKE_ARGS          ${EXTERNAL_COMMON_CMAKE_ARGS}
+        EXTERNALS_BIN_DIR   ${EXTERNALS_BINARY_DIR}
+        BUILD_TYPE          Release
 )
 
 # ---------------------------------------------------------------------------------
 # FREETYPE CPP
 # ---------------------------------------------------------------------------------
-set(EXTERNAL_FREETYPE_CMAKE_ARGS
-        ${EXTERNAL_COMMON_CMAKE_ARGS}
-        # Project specific cmake args
-        -DBUILD_SHARED_LIBS=FALSE
-        -DFT_DISABLE_ZLIB=TRUE
-        -DFT_DISABLE_BZIP2=TRUE
-        -DFT_DISABLE_PNG=TRUE
-        -DFT_DISABLE_HARFBUZZ=TRUE
-        -DFT_DISABLE_BROTLI=TRUE
-)
 
 add_external_git_project(
-        "freetype_cpp"
-        "https://github.com/freetype/freetype.git"
-        "${EXTERNAL_FREETYPE_VERSION}"
-        "${EXTERNAL_FREETYPE_CMAKE_ARGS}"
-        "${EXTERNALS_BINARY_DIR}"
-        "Release"
+        NAME                freetype_cpp
+        GIT_REPOSITORY      https://github.com/freetype/freetype.git
+        GIT_TAG             ${EXTERNAL_FREETYPE_VERSION}
+        CMAKE_ARGS          ${EXTERNAL_COMMON_CMAKE_ARGS}
+                            -DBUILD_SHARED_LIBS=FALSE
+                            -DFT_DISABLE_ZLIB=TRUE
+                            -DFT_DISABLE_BZIP2=TRUE
+                            -DFT_DISABLE_PNG=TRUE
+                            -DFT_DISABLE_HARFBUZZ=TRUE
+                            -DFT_DISABLE_BROTLI=TRUE
+        EXTERNALS_BIN_DIR   ${EXTERNALS_BINARY_DIR}
+        BUILD_TYPE          Release
 )
 
 # ---------------------------------------------------------------------------------
 # SFML CPP
 # ---------------------------------------------------------------------------------
-set(EXTERNAL_SFML_CMAKE_ARGS
-        ${EXTERNAL_COMMON_CMAKE_ARGS}
-        # Project specific cmake args
-        -DSFML_BUILD_FRAMEWORKS=FALSE
-        -DBUILD_SHARED_LIBS=FALSE
-        -DSFML_USE_STATIC_STD_LIBS=TRUE
-)
 
 add_external_git_project(
-        "sfml_cpp"
-        "https://github.com/SFML/SFML.git"
-        "${EXTERNAL_SFML_VERSION}"
-        "${EXTERNAL_SFML_CMAKE_ARGS}"
-        "${EXTERNALS_BINARY_DIR}"
-        "Release"
+        NAME                sfml_cpp
+        GIT_REPOSITORY      https://github.com/SFML/SFML.git
+        GIT_TAG             ${EXTERNAL_SFML_VERSION}
+        CMAKE_ARGS          ${EXTERNAL_COMMON_CMAKE_ARGS}
+                            -DSFML_BUILD_FRAMEWORKS=FALSE
+                            -DBUILD_SHARED_LIBS=FALSE
+                            -DSFML_USE_STATIC_STD_LIBS=TRUE
+        EXTERNALS_BIN_DIR   ${EXTERNALS_BINARY_DIR}
+        BUILD_TYPE          Release
 )
