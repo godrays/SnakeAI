@@ -35,6 +35,19 @@ if (APPLE)
             freetype
             SnakeGameLib
             )
+elseif (WIN32)
+    target_link_libraries(${TARGET_NAME}
+            sfml-graphics-s
+            sfml-window-s
+            sfml-audio-s
+            sfml-network-s
+            sfml-system-s
+            docopt
+            freetype
+            SnakeGameLib
+            opengl32
+            winmm
+            )
 elseif (LINUX)
     target_link_libraries(${TARGET_NAME}
             sfml-graphics-s

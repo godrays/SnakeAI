@@ -192,7 +192,7 @@ void GACmd::PlayModel(const std::string & modelFilename)
     });
 
     sf::Clock  clock;
-    float  elapsedTime;
+    float  elapsedTime = 0;
     float  elapsedTimeMax = 0.07;
 
     // Main loop
