@@ -15,6 +15,11 @@
 // System includes
 #include <random>
 
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
 
 // Activation Type
 enum class ActivationType : int64_t

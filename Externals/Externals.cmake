@@ -82,6 +82,15 @@ set(EXTERNAL_COMMON_CMAKE_ARGS
         -DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}
 )
 
+if(MSVC)
+    list(APPEND EXTERNAL_COMMON_CMAKE_ARGS
+        -DCMAKE_C_FLAGS_DEBUG=/MTd
+        -DCMAKE_C_FLAGS_RELEASE=/MT
+        -DCMAKE_CXX_FLAGS_DEBUG=/MTd
+        -DCMAKE_CXX_FLAGS_RELEASE=/MT
+    )
+endif()
+
 # ---------------------------------------------------------------------------------
 # DOCOPT CPP
 # ---------------------------------------------------------------------------------
