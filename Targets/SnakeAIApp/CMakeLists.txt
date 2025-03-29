@@ -47,7 +47,6 @@ elseif (WIN32)
             SnakeGameLib
             opengl32
             winmm
-            pthread
             )
 elseif (LINUX)
     target_link_libraries(${TARGET_NAME}
