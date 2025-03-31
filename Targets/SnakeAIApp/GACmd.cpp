@@ -53,7 +53,7 @@ void GACmd::Run(const int argc, const char *argv[])
         --mp=number             Mutate probability (%).     [Default: 1]
         --tr=number             Transfer ratio (%).         [Default: 15]
         --cr=number             Crossover (%).              [Default: 50]
-        --sc=number             Model sampling count per generation. [Default: 2000]
+        --sc=number             Model sampling count per generation. [Default: 200]
         --maxGen=number         Maximum number of generation for training. [Default: 1000]
     )";
 

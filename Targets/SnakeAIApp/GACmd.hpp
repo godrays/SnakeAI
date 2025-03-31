@@ -78,7 +78,7 @@ private:
     std::size_t m_gaMutateProb{1};
     std::size_t m_gaTransferRatio{15};
     std::size_t m_gaCrossover{50};
-    std::size_t m_gaSamplingSize{2000};
+    std::size_t m_gaSamplingSize{200};
     std::size_t m_maxGeneration{1000};
 
     sf::RenderWindow   m_window;

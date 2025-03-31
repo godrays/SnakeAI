@@ -28,9 +28,9 @@ A genetic algorithm requires a fitness score to evaluate how well an individual 
     fitness score = highestScore * 500 + avgScore * 50 - avgDeaths * 15 - avgSteps * 10 - avgLongLoopFails * 100
 ```
 
-Average values from many random starting games is used to calculate the fitness score. A single game result alone is not sufficient to properly evaluate how well a model is performing, which is why the average across 2000 games is used instead. 
+Average values from many random starting games is used to calculate the fitness score. A single game result alone is not sufficient to properly evaluate how well a model is performing, which is why the average across 200 games is used instead. 
 
-The highest score refers to the maximum score achieved by a particular model across those 2000 games.
+The highest score refers to the maximum score achieved by a particular model across those 200 games.
 
 Finding a good fitness function formula is an art.
 
