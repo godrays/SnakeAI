@@ -53,7 +53,8 @@ function(add_external_git_project)
             LOG_OUTPUT_ON_FAILURE ON
             GIT_SUBMODULES_RECURSE ON
             GIT_PROGRESS OFF
-            BUILD_ALWAYS ON
+            BUILD_ALWAYS OFF
+            UPDATE_COMMAND ""
     )
 
     set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${lib_dir}")
