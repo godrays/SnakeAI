@@ -152,7 +152,7 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
         if (elapsedTime >= 10 || (elapsedTime > 0.25 && updateGame))
         {
             snakeGame.Update();
-            if (snakeGame.GetGameState() != SnakeGameState::kSnakeGameStateRunning)
+            if (snakeGame.GetGameState() != SnakeGameState::kRunning)
             {
                 snakeGame.Reset();
             }
@@ -180,10 +180,10 @@ void NoAICmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
             block.setPosition(static_cast<float>(x * m_blockSize), static_cast<float>(y * m_blockSize));
             switch (snakeGame.GetBoardObject(x, y))
             {
-                case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
-                case BoardObjType::kBoardObjSnakeBody:   block.setFillColor(sf::Color::Green);   break;
-                case BoardObjType::kBoardObjApple:       block.setFillColor(sf::Color::Red);     break;
-                default:                                 block.setFillColor(sf::Color::Black);   break;
+                case BoardObjType::kSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
+                case BoardObjType::kSnakeBody:   block.setFillColor(sf::Color::Green);   break;
+                case BoardObjType::kApple:       block.setFillColor(sf::Color::Red);     break;
+                default:                         block.setFillColor(sf::Color::Black);   break;
             }
             blockIndex++;
         }
@@ -228,11 +228,11 @@ void NoAICmd::ProcessEvents(SnakeGame& snakeGame, bool & updateGame)
             // Check if the pressed key is the space key
             switch (event.key.code)
             {
-                case sf::Keyboard::Escape:     m_window.close();                                        break;
-                case sf::Keyboard::Left:       snakeGame.SetDirection(SnakeDirection::kSnakeDirLeft);   break;
-                case sf::Keyboard::Right:      snakeGame.SetDirection(SnakeDirection::kSnakeDirRight);  break;
-                case sf::Keyboard::Up:         snakeGame.SetDirection(SnakeDirection::kSnakeDirUp);     break;
-                case sf::Keyboard::Down:       snakeGame.SetDirection(SnakeDirection::kSnakeDirDown);   break;
+                case sf::Keyboard::Escape:     m_window.close();                                break;
+                case sf::Keyboard::Left:       snakeGame.SetDirection(SnakeDirection::kLeft);   break;
+                case sf::Keyboard::Right:      snakeGame.SetDirection(SnakeDirection::kRight);  break;
+                case sf::Keyboard::Up:         snakeGame.SetDirection(SnakeDirection::kUp);     break;
+                case sf::Keyboard::Down:       snakeGame.SetDirection(SnakeDirection::kDown);   break;
                 default: break;
             }
         }

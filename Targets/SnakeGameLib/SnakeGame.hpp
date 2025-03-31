@@ -20,28 +20,28 @@
 
 enum class SnakeDirection : int32_t
 {
-    kSnakeDirUp     = 0,
-    kSnakeDirDown   = 1,
-    kSnakeDirLeft   = 2,
-    kSnakeDirRight  = 3,
+    kUp     = 0,
+    kDown   = 1,
+    kLeft   = 2,
+    kRight  = 3,
 };
 
 enum class BoardObjType : int32_t
 {
-    kBoardObjEmpty      = 0,
-    kBoardObjSnakeHead  = 1,
-    kBoardObjSnakeBody  = 2,
-    kBoardObjApple      = 3,
+    kEmpty      = 0,
+    kSnakeHead  = 1,
+    kSnakeBody  = 2,
+    kApple      = 3,
 };
 
 enum class SnakeGameState : int32_t
 {
-    kSnakeGameStateInvalid          = 0,
-    kSnakeGameStateRunning          = 1,
-    kSnakeGameStateFailedHitWall    = 2,
-    kSnakeGameStateFailedHitItself  = 3,
-    kSnakeGameStateFailedLongLoop   = 4,
-    kSnakeGameStateWon              = 5,
+    kInvalid          = 0,
+    kRunning          = 1,
+    kFailedHitWall    = 2,
+    kFailedHitItself  = 3,
+    kFailedLongLoop   = 4,
+    kWon              = 5,
 };
 
 struct Position
@@ -61,14 +61,14 @@ public:
     explicit SnakeGame(const int boardWidth, const int boardHeight, const int seed) :
             m_boardWidth{boardWidth},
             m_boardHeight{boardHeight},
-            m_direction{SnakeDirection::kSnakeDirUp},
-            m_gameState{SnakeGameState::kSnakeGameStateInvalid},
+            m_direction{SnakeDirection::kUp},
+            m_gameState{SnakeGameState::kInvalid},
             m_score{0},
             m_steps{0},
             m_rndEng(seed)
     {
         // Initialize board 2D game board.
-        m_board.resize(m_boardHeight, std::vector<BoardObjType>(m_boardWidth, BoardObjType::kBoardObjEmpty));
+        m_board.resize(m_boardHeight, std::vector<BoardObjType>(m_boardWidth, BoardObjType::kEmpty));
 
         Reset();
     }
@@ -87,10 +87,10 @@ public:
     void SetDirection(const SnakeDirection & newDir)
     {
         // Ignore direction change if the change is opposite side of the direction.
-        if (m_direction == SnakeDirection::kSnakeDirUp    && newDir == SnakeDirection::kSnakeDirDown)  return;
-        if (m_direction == SnakeDirection::kSnakeDirDown  && newDir == SnakeDirection::kSnakeDirUp)    return;
-        if (m_direction == SnakeDirection::kSnakeDirLeft  && newDir == SnakeDirection::kSnakeDirRight) return;
-        if (m_direction == SnakeDirection::kSnakeDirRight && newDir == SnakeDirection::kSnakeDirLeft)  return;
+        if (m_direction == SnakeDirection::kUp    && newDir == SnakeDirection::kDown)  return;
+        if (m_direction == SnakeDirection::kDown  && newDir == SnakeDirection::kUp)    return;
+        if (m_direction == SnakeDirection::kLeft  && newDir == SnakeDirection::kRight) return;
+        if (m_direction == SnakeDirection::kRight && newDir == SnakeDirection::kLeft)  return;
 
         m_direction = newDir;
     }

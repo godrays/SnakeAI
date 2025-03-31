@@ -16,7 +16,7 @@
 
 void SnakeGame::Update()
 {
-    if (m_gameState != SnakeGameState::kSnakeGameStateRunning)
+    if (m_gameState != SnakeGameState::kRunning)
     {
         return;
     }
@@ -27,7 +27,7 @@ void SnakeGame::Update()
     // more chance to survive.
     if (m_steps > static_cast<size_t>(m_boardWidth * m_boardHeight))
     {
-        m_gameState = SnakeGameState::kSnakeGameStateFailedLongLoop;
+        m_gameState = SnakeGameState::kFailedLongLoop;
         return;
     }
 
@@ -35,10 +35,10 @@ void SnakeGame::Update()
 
     switch (m_direction)
     {
-        case SnakeDirection::kSnakeDirUp:       newHeadPos.y--;     break;
-        case SnakeDirection::kSnakeDirDown:     newHeadPos.y++;     break;
-        case SnakeDirection::kSnakeDirLeft:     newHeadPos.x--;     break;
-        case SnakeDirection::kSnakeDirRight:    newHeadPos.x++;     break;
+        case SnakeDirection::kUp:       newHeadPos.y--;     break;
+        case SnakeDirection::kDown:     newHeadPos.y++;     break;
+        case SnakeDirection::kLeft:     newHeadPos.x--;     break;
+        case SnakeDirection::kRight:    newHeadPos.x++;     break;
         default:                                                    break;
     }
 
@@ -46,17 +46,17 @@ void SnakeGame::Update()
     if (newHeadPos.x < 0 || newHeadPos.x >= m_boardWidth ||
         newHeadPos.y < 0 || newHeadPos.y >= m_boardHeight)
     {
-        m_gameState = SnakeGameState::kSnakeGameStateFailedHitWall;
+        m_gameState = SnakeGameState::kFailedHitWall;
         return;
     }
 
     auto boardObj = m_board[newHeadPos.y][newHeadPos.x];
 
     // Check if the snake touches its own body.
-    if (boardObj == BoardObjType::kBoardObjSnakeHead ||
-        boardObj == BoardObjType::kBoardObjSnakeBody)
+    if (boardObj == BoardObjType::kSnakeHead ||
+        boardObj == BoardObjType::kSnakeBody)
     {
-        m_gameState = SnakeGameState::kSnakeGameStateFailedHitItself;
+        m_gameState = SnakeGameState::kFailedHitItself;
         return;
     }
 
@@ -71,7 +71,7 @@ void SnakeGame::Update()
 
         if (!PlaceApple())
         {
-            m_gameState = SnakeGameState::kSnakeGameStateWon;
+            m_gameState = SnakeGameState::kWon;
             return;
         }
     }
@@ -92,8 +92,8 @@ void SnakeGame::Reset()
     m_steps = 0;
     m_score = 0;
     m_snake.clear();
-    m_gameState = SnakeGameState::kSnakeGameStateRunning;
-    m_direction = SnakeDirection::kSnakeDirUp;
+    m_gameState = SnakeGameState::kRunning;
+    m_direction = SnakeDirection::kUp;
 
     Position  snakeHead;
     snakeHead.x = GetRandomNumber(2, m_boardWidth-2);
@@ -120,7 +120,7 @@ std::vector<float> SnakeGame::GetParameters() const
     auto IsPositionSafe = [&](const int x, const int y)
     {
         return x >= 0 && y >= 0 && x < m_boardWidth && y < m_boardHeight &&
-               (m_board[y][x] == BoardObjType::kBoardObjEmpty || m_board[y][x] == BoardObjType::kBoardObjApple);
+               (m_board[y][x] == BoardObjType::kEmpty || m_board[y][x] == BoardObjType::kApple);
     };
 
     const int x = snakeHeadPos.x;
@@ -152,10 +152,10 @@ std::vector<float> SnakeGame::GetParameters() const
 
     switch (m_direction)
     {
-        case SnakeDirection::kSnakeDirUp:    snakesDirUp    = 1;  break;
-        case SnakeDirection::kSnakeDirDown:  snakesDirDown  = 1;  break;
-        case SnakeDirection::kSnakeDirLeft:  snakesDirLeft  = 1;  break;
-        case SnakeDirection::kSnakeDirRight: snakesDirRight = 1;  break;
+        case SnakeDirection::kUp:    snakesDirUp    = 1;  break;
+        case SnakeDirection::kDown:  snakesDirDown  = 1;  break;
+        case SnakeDirection::kLeft:  snakesDirLeft  = 1;  break;
+        case SnakeDirection::kRight: snakesDirRight = 1;  break;
         default: break;
     }
 
@@ -193,7 +193,7 @@ void SnakeGame::ClearBoard()
     {
         for (int x = 0; x < m_boardWidth; ++x)
         {
-            m_board[y][x] = BoardObjType::kBoardObjEmpty;
+            m_board[y][x] = BoardObjType::kEmpty;
         }
     }
 }
@@ -208,12 +208,12 @@ void SnakeGame::RenderSnake()
     {
         if (!headRendered)
         {
-            m_board[bodyPos.y][bodyPos.x] = BoardObjType::kBoardObjSnakeHead;
+            m_board[bodyPos.y][bodyPos.x] = BoardObjType::kSnakeHead;
             headRendered = true;
         }
         else
         {
-            m_board[bodyPos.y][bodyPos.x] = BoardObjType::kBoardObjSnakeBody;
+            m_board[bodyPos.y][bodyPos.x] = BoardObjType::kSnakeBody;
         }
     }
 }
@@ -222,7 +222,7 @@ void SnakeGame::RenderSnake()
 void SnakeGame::RenderApple()
 {
     // Render Apple
-    m_board[m_applePos.y][m_applePos.x] = BoardObjType::kBoardObjApple;
+    m_board[m_applePos.y][m_applePos.x] = BoardObjType::kApple;
 }
 
 
@@ -234,7 +234,7 @@ bool SnakeGame::PlaceApple()
     {
         for (int x=0; x<m_boardWidth; ++x)
         {
-            if (m_board[y][x] == BoardObjType::kBoardObjEmpty)
+            if (m_board[y][x] == BoardObjType::kEmpty)
             {
                 emptySpots.emplace_back(x,y);
             }
@@ -263,8 +263,8 @@ float SnakeGame::GetDistance(const Position & pos, const int xDir, const int yDi
     while (intersectionPos.x + xDir >= 0 && intersectionPos.y + yDir >= 0 &&
            intersectionPos.x + xDir < m_boardWidth && intersectionPos.y + yDir < m_boardHeight &&
            (!useSnakeBody ||
-            (m_board[intersectionPos.y + yDir][intersectionPos.x + xDir] != BoardObjType::kBoardObjSnakeHead &&
-             m_board[intersectionPos.y + yDir][intersectionPos.x + xDir] != BoardObjType::kBoardObjSnakeBody)))
+            (m_board[intersectionPos.y + yDir][intersectionPos.x + xDir] != BoardObjType::kSnakeHead &&
+             m_board[intersectionPos.y + yDir][intersectionPos.x + xDir] != BoardObjType::kSnakeBody)))
     {
         intersectionPos.x += xDir;
         intersectionPos.y += yDir;

@@ -310,7 +310,7 @@ void GACmd::CalculateGameNextStep(SnakeGame& snakeGame, const std::shared_ptr<ai
     snakeGame.Update();
 
     // Prepare game board to Render.
-    if (snakeGame.GetGameState() != SnakeGameState::kSnakeGameStateRunning)
+    if (snakeGame.GetGameState() != SnakeGameState::kRunning)
     {
         snakeGame.Reset();
     }
@@ -329,10 +329,10 @@ void GACmd::UpdateGameBoardsDrawableBlocks(const SnakeGame& snakeGame)
             block.setPosition(static_cast<float>(x * m_blockSize), static_cast<float>(y * m_blockSize));
             switch (snakeGame.GetBoardObject(x, y))
             {
-                case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
-                case BoardObjType::kBoardObjSnakeBody:   block.setFillColor(sf::Color::Green);   break;
-                case BoardObjType::kBoardObjApple:       block.setFillColor(sf::Color::Red);     break;
-                default:                                 block.setFillColor(sf::Color::Black);   break;
+                case BoardObjType::kSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
+                case BoardObjType::kSnakeBody:   block.setFillColor(sf::Color::Green);   break;
+                case BoardObjType::kApple:       block.setFillColor(sf::Color::Red);     break;
+                default:                         block.setFillColor(sf::Color::Black);   break;
             }
             blockIndex++;
         }
@@ -379,7 +379,7 @@ float GACmd::SimulateSnakeGames(const std::size_t samplingSize, const std::vecto
     // Run the same model N times to assess quality of the individual (chromosome/array of genes/NN Model weights).
     for (std::size_t i=0; i<samplingSize; ++i)
     {
-        while (snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateRunning)
+        while (snakeGame.GetGameState() == SnakeGameState::kRunning)
         {
             // Get game parameters to use as inputs to neural network model.
             auto modelInputs = snakeGame.GetParameters();
@@ -396,12 +396,12 @@ float GACmd::SimulateSnakeGames(const std::size_t samplingSize, const std::vecto
             snakeGame.Update();
         }
 
-        if (snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateFailedHitWall ||
-            snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateFailedHitItself)
+        if (snakeGame.GetGameState() == SnakeGameState::kFailedHitWall ||
+            snakeGame.GetGameState() == SnakeGameState::kFailedHitItself)
         {
             avgDeaths++;
         }
-        if (snakeGame.GetGameState() == SnakeGameState::kSnakeGameStateFailedLongLoop)
+        if (snakeGame.GetGameState() == SnakeGameState::kFailedLongLoop)
         {
             avgLongLoopFails++;
         }
@@ -432,12 +432,12 @@ SnakeDirection GACmd::DetermineSnakeDirection(const aix::Tensor& outputs)
     const auto o2 = outputs.value().getValueAt<float>({0, 2});
     const auto o3 = outputs.value().getValueAt<float>({0, 3});
 
-    auto newDir = SnakeDirection::kSnakeDirUp;
+    auto newDir = SnakeDirection::kUp;
     float maxValue = o0;
 
-    if (maxValue < o1) { newDir = SnakeDirection::kSnakeDirDown; maxValue = o1; }
-    if (maxValue < o2) { newDir = SnakeDirection::kSnakeDirLeft; maxValue = o2; }
-    if (maxValue < o3) { newDir = SnakeDirection::kSnakeDirRight; }
+    if (maxValue < o1) { newDir = SnakeDirection::kDown; maxValue = o1; }
+    if (maxValue < o2) { newDir = SnakeDirection::kLeft; maxValue = o2; }
+    if (maxValue < o3) { newDir = SnakeDirection::kRight; }
 
     return newDir;
 }
