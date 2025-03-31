@@ -15,8 +15,8 @@
 #include "BaseCmd.hpp"
 #include "SFML/Graphics.hpp"
 #include "SnakeGame.hpp"
-#include "FFNN.hpp"
 // External includes
+#include <aix.hpp>
 #include <docopt/docopt.h>
 // System includes
 #include <map>
@@ -25,20 +25,20 @@
 namespace sai::cmd
 {
 
-class GACmd : public BaseCmd
+class GACmd final : public BaseCmd
 {
 public:
     // Constructor
     GACmd() = default;
 
     // Destructor
-    virtual ~GACmd() = default;
+    ~GACmd() override = default;
 
-    void Run(int argc, const char * argv[]) final;
+    void Run(int argc, const char * argv[]) override;
 
 protected:
     // Validate required arguments.
-    bool ValidateArguments(std::map<std::string, docopt::value> & args, const char * USAGE);
+    static bool ValidateArguments(std::map<std::string, docopt::value> & args, const char * USAGE);
 
     // Executes the command based on the given commandline parameter options.
     void ExecuteCommand(std::map<std::string, docopt::value> & args);
@@ -46,25 +46,27 @@ protected:
     void PlayModel(const std::string & modelFilename);
     void TrainModel(const std::string & modelFilename);
 
-    // Creates and returns a pre-configured FFNN object.
-    FFNN CreateFFNN();
+    // Creates and returns a pre-configured FFNN Model object.
+    static std::shared_ptr<aix::nn::Sequential> CreateFFNN();
 
-    double SimulateSnakeGames(std::size_t samplingSize, const std::vector<double> & genesVector, int rndSeed);
+    float SimulateSnakeGames(std::size_t samplingSize, const std::vector<float> & genesVector, int rndSeed) const;
 
     // Calculates game's next step.
-    void CalculateGameNextStep(SnakeGame& snakeGame, FFNN& ffnn) const;
+    static void CalculateGameNextStep(SnakeGame& snakeGame, const std::shared_ptr<aix::nn::Sequential>& ffnn) ;
 
     // Draws game board.
-    void DrawGameBoard(sf::Text& text);
+    void DrawGameBoard(const sf::Text& text);
 
     // Determine direction of the snake from ML model outputs.
-    SnakeDirection DetermineSnakeDirection(const Eigen::MatrixXd& outputs) const;
+    static SnakeDirection DetermineSnakeDirection(const aix::Tensor& outputs) ;
 
     // Updates position of the drawable game board blocks.
-    void UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame);
+    void UpdateGameBoardsDrawableBlocks(const SnakeGame& snakeGame);
 
     // Processes window and keypress events.
     void ProcessEvents(float &elapsedTimeMax);
+
+    float FitnessFunc(const std::vector<float>& value, size_t samplingSize, int rndSeed) const;
 
 private:
     int m_boardWidth{10};

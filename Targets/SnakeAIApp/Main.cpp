@@ -18,9 +18,9 @@
 #include <vector>
 
 
-int main(int argc, const char* argv[])
+int main(const int argc, const char* argv[])
 {
-    static const char USAGE[] =
+    static constexpr char USAGE[] =
     R"(
     Snake AI - Copyright (c) 2023-Present, Arkin Terli. All rights reserved.
 

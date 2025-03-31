@@ -22,9 +22,9 @@
 namespace sai::cmd
 {
 
-void NoAICmd::Run(int argc, const char *argv[])
+void NoAICmd::Run(const int argc, const char *argv[])
 {
-    static const char USAGE[] =
+    static constexpr char USAGE[] =
     R"(
     Snake AI - Copyright (c) 2023-Present, Arkin Terli. All rights reserved.
 
@@ -100,16 +100,16 @@ bool NoAICmd::ValidateArguments(std::map <std::string, docopt::value> &args, con
 void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 {
     std::random_device rndDev;
-    int rndSeed = static_cast<int>(rndDev());
+    const int rndSeed = static_cast<int>(rndDev());
 
     // Override parameters here
     if (args["--bw"])  m_boardWidth  = args["--bw"].asLong();
     if (args["--bh"])  m_boardHeight = args["--bh"].asLong();
     if (args["--bls"]) m_blockSize   = args["--bls"].asLong();
-    bool useStep = args["--usestep"].asBool();
+    const bool useStep = args["--usestep"].asBool();
 
-    int windowWidth  = m_boardWidth  * m_blockSize;
-    int windowHeight = m_boardHeight * m_blockSize;
+    const int windowWidth  = m_boardWidth  * m_blockSize;
+    const int windowHeight = m_boardHeight * m_blockSize;
 
     // Create a window with a title
     m_window.create(sf::VideoMode(windowWidth, windowHeight), "Snake AI - Manual");
@@ -127,7 +127,7 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 
     std::for_each(m_boardBlocks.begin(), m_boardBlocks.end(), [&](sf::RectangleShape & shape)
     {
-        shape.setSize({float(m_blockSize), float(m_blockSize)});
+        shape.setSize({static_cast<float>(m_blockSize), static_cast<float>(m_blockSize)});
         shape.setOutlineThickness(2);
         shape.setOutlineColor(sf::Color::Black);
     });
@@ -141,7 +141,7 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
         bool updateGame = !useStep;
 
         // Time elapsed between two frames.
-        float deltaTime = clock.restart().asSeconds();
+        const float deltaTime = clock.restart().asSeconds();
 
         // Processes window and keypress events.
         ProcessEvents(snakeGame, updateGame);
@@ -177,7 +177,7 @@ void NoAICmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
         for (int x=0; x < m_boardWidth; ++x)
         {
             auto & block = m_boardBlocks[blockIndex];
-            block.setPosition(float(x * m_blockSize), float(y * m_blockSize));
+            block.setPosition(static_cast<float>(x * m_blockSize), static_cast<float>(y * m_blockSize));
             switch (snakeGame.GetBoardObject(x, y))
             {
                 case BoardObjType::kBoardObjSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
@@ -191,7 +191,7 @@ void NoAICmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
 }
 
 
-void NoAICmd::DrawGameBoard(sf::Text& text)
+void NoAICmd::DrawGameBoard(const sf::Text& text)
 {
     // Clear the window with a black color
     m_window.clear(sf::Color::Black);

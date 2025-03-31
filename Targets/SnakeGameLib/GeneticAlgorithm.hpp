@@ -37,12 +37,12 @@ public:
         return m_value;
     }
 
-    double GetFitness() const
+    float GetFitness() const
     {
         return m_fitness;
     }
 
-    void SetFitness(double fitness)
+    void SetFitness(const float fitness)
     {
         m_fitness = fitness;
     }
@@ -54,7 +54,7 @@ public:
 
 private:
     std::vector<T>  m_value;
-    double          m_fitness;
+    float  m_fitness;
 };
 
 
@@ -87,14 +87,14 @@ public:
         std::vector<std::future<void>>  results;
         for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
-            auto futureRet = tp.Enqueue([&](std::size_t i)
+            auto futureRet = tp.Enqueue([&](std::size_t n)
             {
                 // Generate random generic material value.
                 std::vector<T>  value(m_geneticMaterialLength, 0);
                 std::generate_n(value.begin(), m_geneticMaterialLength, m_randomItemFunc);
 
                 Individual<T> newChild{value};
-                m_population[i] = newChild;
+                m_population[n] = newChild;
             }, i);
 
             results.emplace_back(std::move(futureRet));
@@ -123,17 +123,17 @@ public:
         std::vector<std::future<void>>  results;
         for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
-            auto futureRet = tp.Enqueue([&](std::size_t i)
+            auto futureRet = tp.Enqueue([&](std::size_t n)
             {
-                if (i < m_transferCount)
+                if (n < m_transferCount)
                 {
-                    nextGeneration[i] = m_population[i];
+                    nextGeneration[n] = m_population[n];
                 }
                 else
                 {
-                    Individual<T> & mother = m_population[GetRandomNumber(0, m_crossoverThreshold)];
-                    Individual<T> & father = m_population[GetRandomNumber(0, m_crossoverThreshold)];
-                    nextGeneration[i] = CreateChild(mother, father, m_parentRatio, m_mutateProbability);
+                    const Individual<T> & mother = m_population[GetRandomNumber(0, m_crossoverThreshold)];
+                    const Individual<T> & father = m_population[GetRandomNumber(0, m_crossoverThreshold)];
+                    nextGeneration[n] = CreateChild(mother, father, m_parentRatio, m_mutateProbability);
                 }
             }, i);
 
@@ -154,9 +154,9 @@ public:
         SortIndividuals();
     }
 
-    void SetFitnessFunc(std::function<std::size_t(const std::vector<T> & value)>&& func)
+    void SetFitnessFunc(std::function<float(const std::vector<T>& value)> func)
     {
-        m_fitnessFunc = std::move(func);
+        m_fitnessFunc = func;
     }
 
     void SetRandomItemFunc(std::function<T()> && func)
@@ -205,9 +205,9 @@ private:
         std::vector<std::future<void>>  results;
         for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
-            auto futureRet = tp.Enqueue([&](std::size_t i)
+            auto futureRet = tp.Enqueue([&](std::size_t n)
             {
-                auto & individual = m_population[i];
+                auto & individual = m_population[n];
                 individual.SetFitness(m_fitnessFunc(individual.GetValue()));
             }, i);
 
@@ -222,7 +222,7 @@ private:
         }
     }
 
-    std::size_t GetRandomNumber(std::size_t min, std::size_t max)
+    std::size_t GetRandomNumber(const std::size_t min, const std::size_t max)
     {
         return std::uniform_int_distribution<std::size_t>(min, max)(m_rndEngine);
     }
@@ -246,7 +246,7 @@ private:
     std::size_t  m_newIndividualsPerGeneration;
     std::size_t  m_geneticMaterialLength;
 
-    std::function<double(const std::vector<T> & value)>   m_fitnessFunc;
+    std::function<float(const std::vector<T>& value)>   m_fitnessFunc;
     std::function<T()>   m_randomItemFunc;
     std::mt19937         m_rndEngine;
 };
@@ -264,9 +264,9 @@ public:
     {
     }
 
-    void SetFitnessFunc(std::function<double(const std::vector<T> & value)>&& func)
+    void SetFitnessFunc(std::function<float(const std::vector<T>& value)> func)
     {
-        m_population.SetFitnessFunc(std::move(func));
+        m_population.SetFitnessFunc(func);
     }
 
     void SetRandomItemFunc(std::function<T()>&& func)

@@ -107,14 +107,17 @@ add_external_git_project(
 )
 
 # ---------------------------------------------------------------------------------
-# EIGEN CPP
+# AIX CPP
 # ---------------------------------------------------------------------------------
-
 add_external_git_project(
-        NAME                eigen_cpp
-        GIT_REPOSITORY      https://github.com/live-clones/eigen.git
-        GIT_TAG             ${EXTERNAL_EIGEN_VERSION}
+        NAME                aix_cpp
+        GIT_REPOSITORY      https://github.com/godrays/AIX.git
+        GIT_TAG             ${EXTERNAL_AIX_VERSION}
+        GIT_SHALLOW         OFF
         CMAKE_ARGS          ${EXTERNAL_COMMON_CMAKE_ARGS}
+                            -DAIX_BUILD_EXAMPLES=OFF
+                            -DAIX_BUILD_TESTS=OFF
+                            -DAIX_BUILD_STATIC=ON
         EXTERNALS_BIN_DIR   ${EXTERNALS_BINARY_DIR}
         BUILD_TYPE          Release
 )

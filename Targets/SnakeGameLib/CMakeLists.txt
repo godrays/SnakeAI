@@ -10,8 +10,11 @@
 set(TARGET_NAME SnakeGameLib)
 
 add_library(${TARGET_NAME} STATIC
-        FFNN.cpp
         SnakeGame.cpp
 )
 
-add_dependencies(${TARGET_NAME} eigen_cpp)
+add_dependencies(${TARGET_NAME} aix_cpp)
+
+target_link_libraries(${TARGET_NAME} PRIVATE
+        AIXLib
+)

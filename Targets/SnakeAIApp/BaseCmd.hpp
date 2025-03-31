@@ -16,6 +16,8 @@ namespace sai::cmd
 class BaseCmd
 {
 public:
+    virtual ~BaseCmd() = default;
+
     virtual void Run(int argc, const char * argv[]) = 0;
 };
 

@@ -47,7 +47,7 @@ enum class SnakeGameState : int32_t
 struct Position
 {
     Position() : x{0}, y{0} { }
-    Position(int xP, int yP) : x{xP}, y{yP} { }
+    Position(const int xP, const int yP) : x{xP}, y{yP} { }
 
     int x;
     int y;
@@ -58,7 +58,7 @@ class SnakeGame
 {
 public:
     // Constructor
-    explicit SnakeGame(int boardWidth, int boardHeight, int seed) :
+    explicit SnakeGame(const int boardWidth, const int boardHeight, const int seed) :
             m_boardWidth{boardWidth},
             m_boardHeight{boardHeight},
             m_direction{SnakeDirection::kSnakeDirUp},
@@ -74,7 +74,7 @@ public:
     }
 
     // Returns 2D Game board.
-    BoardObjType GetBoardObject(int x, int y)
+    BoardObjType GetBoardObject(const int x, const int y) const
     {
         if (x < 0 || y < 0 || x >= m_boardWidth || y >= m_boardHeight)
         {
@@ -96,7 +96,7 @@ public:
     }
 
     // Returns direction of snake
-    SnakeDirection GetDirection()
+    SnakeDirection GetDirection() const
     {
         return m_direction;
     }
@@ -107,7 +107,7 @@ public:
         return m_score;
     }
 
-    SnakeGameState GetGameState()
+    SnakeGameState GetGameState() const
     {
         return m_gameState;
     }
@@ -125,10 +125,10 @@ public:
     }
 
     // Returns parameters that can be used in AI model training.
-    std::vector<double> GetParameters();
+    std::vector<float> GetParameters() const;
 
     // Returns distance from snake heads to apple.
-    double GetDistanceToApple();
+    float GetDistanceToApple() const;
 
     // Return number of steps  snake took without eating an apple.
     std::size_t GetSteps() const
@@ -153,7 +153,7 @@ private:
     bool PlaceApple();
 
     // Returns distance in block for cross directions.
-    double GetDistance(const Position & pos, int xDir, int yDir, bool useSnakeBody);
+    float GetDistance(const Position & pos, int xDir, int yDir, bool useSnakeBody) const;
 
 private:
     int  m_boardWidth;
@@ -167,5 +167,5 @@ private:
     int m_score;
     std::size_t  m_steps;
     std::mt19937_64   m_rndEng;
-    static const std::size_t  m_parameterSize{16};
+    static constexpr std::size_t  m_parameterSize{16};
 };

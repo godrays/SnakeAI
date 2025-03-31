@@ -25,7 +25,7 @@ void SnakeGame::Update()
 
     // If snake can't get the apple in 100 iterations than kill the game. Longer the same becomes
     // more chance to survive.
-    if (m_steps > std::size_t(m_boardWidth * m_boardHeight))
+    if (m_steps > static_cast<size_t>(m_boardWidth * m_boardHeight))
     {
         m_gameState = SnakeGameState::kSnakeGameStateFailedLongLoop;
         return;
@@ -113,43 +113,42 @@ void SnakeGame::Reset()
 }
 
 
-std::vector<double> SnakeGame::GetParameters()
+std::vector<float> SnakeGame::GetParameters() const
 {
-    std::vector<double>  params;
+    const Position snakeHeadPos = m_snake.front();
 
-    Position snakeHeadPos = m_snake.front();
-    int x = snakeHeadPos.x;
-    int y = snakeHeadPos.y;
-
-    auto IsPositionSafe = [&](int x, int y)
+    auto IsPositionSafe = [&](const int x, const int y)
     {
         return x >= 0 && y >= 0 && x < m_boardWidth && y < m_boardHeight &&
                (m_board[y][x] == BoardObjType::kBoardObjEmpty || m_board[y][x] == BoardObjType::kBoardObjApple);
     };
 
+    const int x = snakeHeadPos.x;
+    const int y = snakeHeadPos.y;
+
     // Are surrounding blocks safe to move? (4 parameters)
-    double isN = IsPositionSafe(x, y-1) ? 1 : 0;
-    double isS = IsPositionSafe(x, y+1) ? 1 : 0;
-    double isW = IsPositionSafe(x-1, y) ? 1 : 0;
-    double isE = IsPositionSafe(x+1, y) ? 1 : 0;
+    const float isN = IsPositionSafe(x, y-1) ? 1 : 0;
+    const float isS = IsPositionSafe(x, y+1) ? 1 : 0;
+    const float isW = IsPositionSafe(x-1, y) ? 1 : 0;
+    const float isE = IsPositionSafe(x+1, y) ? 1 : 0;
 
     // Distance from snake's head to boarder of the game boards. (4 parameters)
-    double dN = y;
-    double dS = m_boardHeight - 1 - y;
-    double dW = x;
-    double dE = m_boardWidth - 1 - x;
+    const float dN = y;
+    const float dS = m_boardHeight - 1 - y;
+    const float dW = x;
+    const float dE = m_boardWidth - 1 - x;
 
     // Direction to apple from snake's head. (4 parameters)
-    double aN = m_applePos.y < y ? 1 : 0;
-    double aS = m_applePos.y > y ? 1 : 0;
-    double aW = m_applePos.x < x ? 1 : 0;
-    double aE = m_applePos.x > x ? 1 : 0;
+    const float aN = m_applePos.y < y ? 1 : 0;
+    const float aS = m_applePos.y > y ? 1 : 0;
+    const float aW = m_applePos.x < x ? 1 : 0;
+    const float aE = m_applePos.x > x ? 1 : 0;
 
     // Snake's current moving direction.  (4 parameters)
-    double snakesDirUp    = 0;
-    double snakesDirDown  = 0;
-    double snakesDirLeft  = 0;
-    double snakesDirRight = 0;
+    float snakesDirUp    = 0;
+    float snakesDirDown  = 0;
+    float snakesDirLeft  = 0;
+    float snakesDirRight = 0;
 
     switch (m_direction)
     {
@@ -160,15 +159,16 @@ std::vector<double> SnakeGame::GetParameters()
         default: break;
     }
 
-    double bW = m_boardWidth;
-    double bH = m_boardHeight;
+    const auto bW = static_cast<float>(m_boardWidth);
+    const auto bH = static_cast<float>(m_boardHeight);
 
     // Add normalized parameters.
-    params = {
-        isN, isS, isW, isE,                                         // Surrounding blocks safety checks.
-        dN/bH, dS/bH, dW/bW, dE/bW,                                 // Normalized snakes' distances to walls.
-        aN, aS, aW, aE,                                             // Apple's direction relative to snakes' head.
-        snakesDirUp, snakesDirDown, snakesDirLeft, snakesDirRight,  // Snakes direction (1 dir is active at a time)
+    std::vector<float> params =
+    {
+        isN, isS, isW, isE,                     // Surrounding blocks safety checks.
+        dN / bH, dS / bH, dW / bW, dE / bW,     // Normalized snakes' distances to walls.
+        aN, aS, aW, aE,                         // Apple's direction relative to snakes' head.
+        snakesDirUp, snakesDirDown, snakesDirLeft, snakesDirRight, // Snakes direction (1 dir is active at a time)
     };
 
     if (params.size() != m_parameterSize)
@@ -247,17 +247,17 @@ bool SnakeGame::PlaceApple()
         return false;
     }
 
-    auto newSpotIndex = GetRandomNumber(0, static_cast<int>(emptySpots.size()-1));
+    const auto newSpotIndex = GetRandomNumber(0, static_cast<int>(emptySpots.size() - 1));
     m_applePos = emptySpots[newSpotIndex];
 
     return true;
 }
 
 
-double SnakeGame::GetDistance(const Position & pos, int xDir, int yDir, bool useSnakeBody)
+float SnakeGame::GetDistance(const Position & pos, const int xDir, const int yDir, const bool useSnakeBody) const
 {
     auto intersectionPos = pos;
-    double distance = 0;    // Measured in blocks.
+    float distance = 0;    // Measured in blocks.
 
     // Find the intersection point on a boarder of the game board.
     while (intersectionPos.x + xDir >= 0 && intersectionPos.y + yDir >= 0 &&
@@ -275,12 +275,12 @@ double SnakeGame::GetDistance(const Position & pos, int xDir, int yDir, bool use
 }
 
 
-double SnakeGame::GetDistanceToApple()
+float SnakeGame::GetDistanceToApple() const
 {
-    Position pos = m_snake.front();
+    const auto pos = m_snake.front();
 
-    double dx = m_applePos.x - pos.x;
-    double dy = m_applePos.y - pos.y;
+    const float dx = m_applePos.x - pos.x;
+    const float dy = m_applePos.y - pos.y;
 
     return std::sqrt(dx*dx + dy*dy);
 }

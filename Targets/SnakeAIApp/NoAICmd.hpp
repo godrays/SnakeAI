@@ -24,26 +24,26 @@
 namespace sai::cmd
 {
 
-class NoAICmd : public BaseCmd
+class NoAICmd final : public BaseCmd
 {
 public:
     // Constructor
     NoAICmd() = default;
 
     // Destructor
-    virtual ~NoAICmd() = default;
+    ~NoAICmd() override = default;
 
-    void Run(int argc, const char * argv[]) final;
+    void Run(int argc, const char * argv[]) override;
 
 protected:
     // Validate required arguments.
-    bool ValidateArguments(std::map<std::string, docopt::value> & args, const char * USAGE);
+    static bool ValidateArguments(std::map<std::string, docopt::value> & args, const char * USAGE);
 
     // Executes the command based on the given commandline parameter options.
     void ExecuteCommand(std::map<std::string, docopt::value> & args);
 
     // Draws game board.
-    void DrawGameBoard(sf::Text& text);
+    void DrawGameBoard(const sf::Text& text);
 
     // Updates position of the drawable game board blocks.
     void UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame);

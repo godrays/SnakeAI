@@ -35,7 +35,7 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
     add_compile_options($<$<CONFIG:Debug>:/MT> $<$<CONFIG:Release>:/MT>)
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")    # Common parameters for debug and release
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wno-unused-function")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
     set(CMAKE_CXX_FLAGS_CCOV "${CMAKE_CXX_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
@@ -45,7 +45,7 @@ endif()
 
 # Set external library versions.
 set(EXTERNAL_DOCOPT_VERSION 400e6dd)
-set(EXTERNAL_EIGEN_VERSION 3.4.0)
+set(EXTERNAL_AIX_VERSION 75ad1717)
 set(EXTERNAL_FREETYPE_VERSION VER-2-12-1)
 set(EXTERNAL_SFML_VERSION 2.6.2)
 
