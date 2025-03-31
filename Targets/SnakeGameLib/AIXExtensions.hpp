@@ -64,7 +64,7 @@ static void deserializeModule(const aix::nn::Module& module, const std::vector<f
 
         // Copy the parameter values from data to the parameter’s memory
         auto* dest = static_cast<float*>(value.data());
-        std::copy(data.begin() + offset, data.begin() + offset + numElements, dest);
+        std::copy_n(data.begin() + offset, numElements, dest);
         offset += numElements;
     }
 

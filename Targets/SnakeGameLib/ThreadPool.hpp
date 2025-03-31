@@ -23,7 +23,7 @@ class ThreadPool
 {
 public:
     // Constructor
-    explicit ThreadPool(size_t maxThreadCount)
+    explicit ThreadPool(const size_t maxThreadCount)
     {
         // Create threads
         for (size_t i=0; i<maxThreadCount; ++i)

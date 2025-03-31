@@ -18,7 +18,7 @@
 #include <SFML/System.hpp>
 // System includes
 #include <filesystem>
-#include <iomanip>
+#include <ranges>
 #include <iostream>
 #include <limits>
 #include <vector>
@@ -183,7 +183,7 @@ void GACmd::PlayModel(const std::string & modelFilename)
 
     // Initialize blocks to render on windows.
     m_boardBlocks.resize(m_boardWidth * m_boardHeight);
-    std::for_each(m_boardBlocks.begin(), m_boardBlocks.end(), [&](sf::RectangleShape & shape)
+    std::ranges::for_each(m_boardBlocks, [&](sf::RectangleShape & shape)
     {
         shape.setSize({static_cast<float>(m_blockSize), static_cast<float>(m_blockSize)});
         shape.setOutlineThickness(2);
