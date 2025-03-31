@@ -57,8 +57,6 @@ function(add_external_git_project)
             UPDATE_COMMAND ""
     )
 
-    set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES "${lib_dir}")
-
     # Make include and lib folders available to prevent linker warnings.
     file(MAKE_DIRECTORY "${lib_dir}/install/include" "${lib_dir}/install/lib")
 
@@ -91,6 +89,15 @@ if(MSVC)
         -DCMAKE_CXX_FLAGS_RELEASE=/MT
     )
 endif()
+
+# ---------------------------------------------------------------------------------
+# CLEAN EXTERNALS TARGET (Cleans only the external projects)
+# ---------------------------------------------------------------------------------
+
+add_custom_target(clean_externals
+        COMMAND ${CMAKE_COMMAND} -E remove_directory ${EXTERNALS_BINARY_DIR}
+        COMMENT "Cleaning external projects."
+)
 
 # ---------------------------------------------------------------------------------
 # DOCOPT CPP
