@@ -132,25 +132,6 @@ add_external_git_project(
 )
 
 # ---------------------------------------------------------------------------------
-# FREETYPE CPP
-# ---------------------------------------------------------------------------------
-
-add_external_git_project(
-        NAME                freetype_cpp
-        GIT_REPOSITORY      https://github.com/freetype/freetype.git
-        GIT_TAG             ${EXTERNAL_FREETYPE_VERSION}
-        CMAKE_ARGS          ${EXTERNAL_COMMON_CMAKE_ARGS}
-                            -DBUILD_SHARED_LIBS=FALSE
-                            -DFT_DISABLE_ZLIB=TRUE
-                            -DFT_DISABLE_BZIP2=TRUE
-                            -DFT_DISABLE_PNG=TRUE
-                            -DFT_DISABLE_HARFBUZZ=TRUE
-                            -DFT_DISABLE_BROTLI=TRUE
-        EXTERNALS_BIN_DIR   ${EXTERNALS_BINARY_DIR}
-        BUILD_TYPE          Release
-)
-
-# ---------------------------------------------------------------------------------
 # SFML CPP
 # ---------------------------------------------------------------------------------
 

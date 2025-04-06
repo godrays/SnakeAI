@@ -15,7 +15,7 @@ add_executable(${TARGET_NAME}
         GACmd.cpp
 )
 
-add_dependencies(${TARGET_NAME} docopt_cpp freetype_cpp sfml_cpp)
+add_dependencies(${TARGET_NAME} docopt_cpp sfml_cpp)
 
 if (APPLE)
     target_link_libraries(${TARGET_NAME} PRIVATE

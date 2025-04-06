@@ -46,7 +46,6 @@ endif()
 # Set external library versions.
 set(EXTERNAL_DOCOPT_VERSION 400e6dd)
 set(EXTERNAL_AIX_VERSION 75ad1717)
-set(EXTERNAL_FREETYPE_VERSION VER-2-12-1)
 set(EXTERNAL_SFML_VERSION 3.0.0)
 
 include(Externals/Externals.cmake)
