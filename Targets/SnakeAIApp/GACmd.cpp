@@ -154,24 +154,27 @@ void GACmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 }
 
 
-void GACmd::PlayModel(const std::string & modelFilename)
-{
+void GACmd::PlayModel(const std::string & modelFilename) {
     std::random_device rndDev;
     const int rndSeed = static_cast<int>(rndDev());
     const int windowWidth  = m_boardWidth  * m_blockSize;
     const int windowHeight = m_boardHeight * m_blockSize;
 
     // Create a window with a title.
-    m_window.create(sf::VideoMode(windowWidth, windowHeight), "Snake AI Model Play Mode");
+    m_window.create(sf::VideoMode({static_cast<unsigned>(windowWidth),
+                                   static_cast<unsigned>(windowHeight)}), "Snake AI Model Play Mode");
     m_window.setFramerateLimit(60);
 
     // Create font
     sf::Font font;
-    font.loadFromMemory(FontSFNSMono, sizeof(FontSFNSMono));
+    if (!font.openFromMemory(FontSFNSMono, sizeof(FontSFNSMono)))
+    {
+        throw std::runtime_error("Failed to load font from memory");
+    }
 
     // Create a text to render on window.
-    sf::Text text("", font, 10);
-    text.setPosition(10, 10);
+    sf::Text text(font, "", 10);
+    text.setPosition({10, 10});
     text.setFillColor(sf::Color::White);
 
     // Create a snake game to simulate each step.
@@ -326,7 +329,7 @@ void GACmd::UpdateGameBoardsDrawableBlocks(const SnakeGame& snakeGame)
         for (int x=0; x < m_boardWidth; ++x)
         {
             auto & block = m_boardBlocks[blockIndex];
-            block.setPosition(static_cast<float>(x * m_blockSize), static_cast<float>(y * m_blockSize));
+            block.setPosition({static_cast<float>(x * m_blockSize), static_cast<float>(y * m_blockSize)});
             switch (snakeGame.GetBoardObject(x, y))
             {
                 case BoardObjType::kSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
@@ -446,24 +449,27 @@ SnakeDirection GACmd::DetermineSnakeDirection(const aix::Tensor& outputs)
 void GACmd::ProcessEvents(float& elapsedTimeMax)
 {
     // Process events
-    sf::Event event{};
-    while (m_window.pollEvent(event))
+    while (const auto event = m_window.pollEvent())
     {
-        // Close the window when the user clicks the close button
-        if (event.type == sf::Event::Closed)
+        // Close the window when the user clicks the close button.
+        if (event->is<sf::Event::Closed>())
+        {
             m_window.close();
-
-        // Check if the event is a key pressed event
-        if (event.type == sf::Event::KeyPressed)
-        {
-            if (event.key.code == sf::Keyboard::Escape)
-                m_window.close();
         }
-        else if (event.type == sf::Event::KeyReleased)
+
+        // Check if the event is a key pressed event.
+        if (event->is<sf::Event::KeyPressed>())
         {
+            const auto keyCode = event->getIf<sf::Event::KeyPressed>()->code;
+
             // Increase or decrease speed of game update.
-            if (event.key.code == sf::Keyboard::Dash  && elapsedTimeMax > 0) elapsedTimeMax -= 0.01;
-            if (event.key.code == sf::Keyboard::Equal && elapsedTimeMax < 1) elapsedTimeMax += 0.01;
+            if (keyCode == sf::Keyboard::Key::Hyphen && elapsedTimeMax > 0) elapsedTimeMax -= 0.01;
+            if (keyCode == sf::Keyboard::Key::Equal  && elapsedTimeMax < 1) elapsedTimeMax += 0.01;
+            if (keyCode == sf::Keyboard::Key::Escape)
+            {
+                m_window.close();
+                break;
+            }
         }
     }
 }

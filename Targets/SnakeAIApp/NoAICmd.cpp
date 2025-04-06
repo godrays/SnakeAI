@@ -112,14 +112,18 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
     const int windowHeight = m_boardHeight * m_blockSize;
 
     // Create a window with a title
-    m_window.create(sf::VideoMode(windowWidth, windowHeight), "Snake AI - Manual");
+    m_window.create(sf::VideoMode({static_cast<unsigned>(windowWidth),
+                                   static_cast<unsigned>(windowHeight)}), "Snake AI - Manual");
     m_window.setFramerateLimit(60);
 
     sf::Font font;
-    font.loadFromMemory(FontSFNSMono, sizeof(FontSFNSMono));
+    if (!font.openFromMemory(FontSFNSMono, sizeof(FontSFNSMono)))
+    {
+        throw std::runtime_error("Failed to load font from memory");
+    }
 
-    sf::Text text("", font, 10);
-    text.setPosition(10, 10);
+    sf::Text text(font, "", 10);
+    text.setPosition({10, 10});
     text.setFillColor(sf::Color::White);
 
     SnakeGame   snakeGame(m_boardWidth, m_boardHeight, rndSeed);
@@ -177,7 +181,7 @@ void NoAICmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
         for (int x=0; x < m_boardWidth; ++x)
         {
             auto & block = m_boardBlocks[blockIndex];
-            block.setPosition(static_cast<float>(x * m_blockSize), static_cast<float>(y * m_blockSize));
+            block.setPosition({static_cast<float>(x * m_blockSize), static_cast<float>(y * m_blockSize)});
             switch (snakeGame.GetBoardObject(x, y))
             {
                 case BoardObjType::kSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
@@ -193,7 +197,7 @@ void NoAICmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
 
 void NoAICmd::DrawGameBoard(const sf::Text& text)
 {
-    // Clear the window with a black color
+    // Clear the window with a black color.
     m_window.clear(sf::Color::Black);
 
     // Draw the board.
@@ -204,7 +208,7 @@ void NoAICmd::DrawGameBoard(const sf::Text& text)
 
     m_window.draw(text);
 
-    // Display the window content on the screen
+    // Display the window content on the screen.
     m_window.display();
 }
 
@@ -212,27 +216,27 @@ void NoAICmd::DrawGameBoard(const sf::Text& text)
 void NoAICmd::ProcessEvents(SnakeGame& snakeGame, bool & updateGame)
 {
     // Process events
-    sf::Event event{};
-    while (m_window.pollEvent(event))
+    while (const auto event = m_window.pollEvent())
     {
-        // Close the window when the user clicks the close button
-        if (event.type == sf::Event::Closed)
+        // Close the window when the user clicks the close button.
+        // Window closed or escape key pressed: exit.
+        if (event->is<sf::Event::Closed>())
         {
             m_window.close();
         }
 
-        // Check if the event is a key pressed event
-        if (event.type == sf::Event::KeyReleased)
+        // Check if the event is a key pressed event.
+        if (event->is<sf::Event::KeyPressed>())
         {
             updateGame = true;
-            // Check if the pressed key is the space key
-            switch (event.key.code)
+            // Check if the pressed key is the space key.
+            switch (event->getIf<sf::Event::KeyPressed>()->code)
             {
-                case sf::Keyboard::Escape:     m_window.close();                                break;
-                case sf::Keyboard::Left:       snakeGame.SetDirection(SnakeDirection::kLeft);   break;
-                case sf::Keyboard::Right:      snakeGame.SetDirection(SnakeDirection::kRight);  break;
-                case sf::Keyboard::Up:         snakeGame.SetDirection(SnakeDirection::kUp);     break;
-                case sf::Keyboard::Down:       snakeGame.SetDirection(SnakeDirection::kDown);   break;
+                case sf::Keyboard::Key::Escape:     m_window.close();                                break;
+                case sf::Keyboard::Key::Left:       snakeGame.SetDirection(SnakeDirection::kLeft);   break;
+                case sf::Keyboard::Key::Right:      snakeGame.SetDirection(SnakeDirection::kRight);  break;
+                case sf::Keyboard::Key::Up:         snakeGame.SetDirection(SnakeDirection::kUp);     break;
+                case sf::Keyboard::Key::Down:       snakeGame.SetDirection(SnakeDirection::kDown);   break;
                 default: break;
             }
         }
