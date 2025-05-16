@@ -14,7 +14,7 @@
 #include <random>
 
 
-void SnakeGame::Update()
+void SnakeGame::update()
 {
     if (m_gameState != SnakeGameState::kRunning)
     {
@@ -69,7 +69,7 @@ void SnakeGame::Update()
         m_score++;
         m_steps = 0;
 
-        if (!PlaceApple())
+        if (!placeApple())
         {
             m_gameState = SnakeGameState::kWon;
             return;
@@ -81,13 +81,13 @@ void SnakeGame::Update()
         m_snake.pop_back();
     }
 
-    ClearBoard();
-    RenderSnake();
-    RenderApple();
+    clearBoard();
+    renderSnake();
+    renderApple();
 }
 
 
-void SnakeGame::Reset()
+void SnakeGame::reset()
 {
     m_steps = 0;
     m_score = 0;
@@ -96,8 +96,8 @@ void SnakeGame::Reset()
     m_direction = SnakeDirection::kUp;
 
     Position  snakeHead;
-    snakeHead.x = GetRandomNumber(2, m_boardWidth-2);
-    snakeHead.y = GetRandomNumber(2, m_boardHeight-2);
+    snakeHead.x = getRandomNumber(2, m_boardWidth-2);
+    snakeHead.y = getRandomNumber(2, m_boardHeight-2);
 
     // Add snake head.
     m_snake.emplace_back(snakeHead);
@@ -106,14 +106,14 @@ void SnakeGame::Reset()
     snakeHead.y++;
     m_snake.emplace_back(snakeHead);
 
-    ClearBoard();
-    RenderSnake();
-    PlaceApple();
-    RenderApple();
+    clearBoard();
+    renderSnake();
+    placeApple();
+    renderApple();
 }
 
 
-std::vector<float> SnakeGame::GetParameters() const
+std::vector<float> SnakeGame::getParameters() const
 {
     const Position snakeHeadPos = m_snake.front();
 
@@ -180,13 +180,13 @@ std::vector<float> SnakeGame::GetParameters() const
 }
 
 
-int SnakeGame::GetRandomNumber(int min, int max)
+int SnakeGame::getRandomNumber(int min, int max)
 {
     return std::uniform_int_distribution<int>(min, max)(m_rndEng);
 }
 
 
-void SnakeGame::ClearBoard()
+void SnakeGame::clearBoard()
 {
     // Reset board.
     for (int y = 0; y < m_boardHeight; ++y)
@@ -199,7 +199,7 @@ void SnakeGame::ClearBoard()
 }
 
 
-void SnakeGame::RenderSnake()
+void SnakeGame::renderSnake()
 {
     bool headRendered = false;
 
@@ -219,14 +219,14 @@ void SnakeGame::RenderSnake()
 }
 
 
-void SnakeGame::RenderApple()
+void SnakeGame::renderApple()
 {
     // Render Apple
     m_board[m_applePos.y][m_applePos.x] = BoardObjType::kApple;
 }
 
 
-bool SnakeGame::PlaceApple()
+bool SnakeGame::placeApple()
 {
     std::vector<Position>  emptySpots;  // Holds empty spots on the game board.
 
@@ -247,14 +247,14 @@ bool SnakeGame::PlaceApple()
         return false;
     }
 
-    const auto newSpotIndex = GetRandomNumber(0, static_cast<int>(emptySpots.size() - 1));
+    const auto newSpotIndex = getRandomNumber(0, static_cast<int>(emptySpots.size() - 1));
     m_applePos = emptySpots[newSpotIndex];
 
     return true;
 }
 
 
-float SnakeGame::GetDistance(const Position & pos, const int xDir, const int yDir, const bool useSnakeBody) const
+float SnakeGame::getDistance(const Position & pos, const int xDir, const int yDir, const bool useSnakeBody) const
 {
     auto intersectionPos = pos;
     float distance = 0;    // Measured in blocks.
@@ -275,7 +275,7 @@ float SnakeGame::GetDistance(const Position & pos, const int xDir, const int yDi
 }
 
 
-float SnakeGame::GetDistanceToApple() const
+float SnakeGame::getDistanceToApple() const
 {
     const auto pos = m_snake.front();
 

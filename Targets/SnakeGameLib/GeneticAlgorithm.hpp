@@ -32,17 +32,17 @@ public:
     {
     }
 
-    std::vector<T> GetValue() const
+    std::vector<T> getValue() const
     {
         return m_value;
     }
 
-    float GetFitness() const
+    float getFitness() const
     {
         return m_fitness;
     }
 
-    void SetFitness(const float fitness)
+    void setFitness(const float fitness)
     {
         m_fitness = fitness;
     }
@@ -78,7 +78,7 @@ public:
         m_rndEngine.seed(rndDev());
     }
 
-    void CreateInitialGeneration()
+    void createInitialGeneration()
     {
         // Create thread pool to calculate fitness functions.
         ThreadPool  tp(std::thread::hardware_concurrency());
@@ -87,7 +87,7 @@ public:
         std::vector<std::future<void>>  results;
         for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
-            auto futureRet = tp.Enqueue([&](std::size_t n)
+            auto futureRet = tp.enqueue([&](std::size_t n)
             {
                 // Generate random generic material value.
                 std::vector<T>  value(m_geneticMaterialLength, 0);
@@ -107,12 +107,12 @@ public:
             results[i].get();     // We don't have a return value but this will rethrow an uncaught exception.
         }
 
-        CalculatePopulationFitnessValues();
+        calculatePopulationFitnessValues();
 
-        SortIndividuals();
+        sortIndividuals();
     }
 
-    void CreateNextGeneration()
+    void createNextGeneration()
     {
         std::vector<Individual<T>>  nextGeneration;
         nextGeneration.resize(m_maxPopulation);
@@ -123,7 +123,7 @@ public:
         std::vector<std::future<void>>  results;
         for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
-            auto futureRet = tp.Enqueue([&](std::size_t n)
+            auto futureRet = tp.enqueue([&](std::size_t n)
             {
                 if (n < m_transferCount)
                 {
@@ -131,9 +131,9 @@ public:
                 }
                 else
                 {
-                    const Individual<T> & mother = m_population[GetRandomNumber(0, m_crossoverThreshold)];
-                    const Individual<T> & father = m_population[GetRandomNumber(0, m_crossoverThreshold)];
-                    nextGeneration[n] = CreateChild(mother, father, m_parentRatio, m_mutateProbability);
+                    const Individual<T> & mother = m_population[getRandomNumber(0, m_crossoverThreshold)];
+                    const Individual<T> & father = m_population[getRandomNumber(0, m_crossoverThreshold)];
+                    nextGeneration[n] = createChild(mother, father, m_parentRatio, m_mutateProbability);
                 }
             }, i);
 
@@ -149,40 +149,40 @@ public:
 
         m_population = nextGeneration;
 
-        CalculatePopulationFitnessValues();
+        calculatePopulationFitnessValues();
 
-        SortIndividuals();
+        sortIndividuals();
     }
 
-    void SetFitnessFunc(std::function<float(const std::vector<T>& value)> func)
+    void setFitnessFunc(std::function<float(const std::vector<T>& value)> func)
     {
         m_fitnessFunc = func;
     }
 
-    void SetRandomItemFunc(std::function<T()> && func)
+    void setRandomItemFunc(std::function<T()> && func)
     {
         m_randomItemFunc = std::move(func);
     }
 
     // Returns the best individual of the current population.
-    const Individual<T> & GetBestIndividual() const
+    const Individual<T> & getBestIndividual() const
     {
         return m_population.front();
     }
 
 private:
-    Individual<T> CreateChild(const Individual<T> & mother, const Individual<T> & father, const std::size_t parentRatio,
+    Individual<T> createChild(const Individual<T> & mother, const Individual<T> & father, const std::size_t parentRatio,
                               const std::size_t mutateProbability)
     {
         std::vector<T>  childValue(m_geneticMaterialLength, 0);
 
         for (size_t i=0; i < m_geneticMaterialLength; ++i)
         {
-            if (GetRandomNumber(0, 100) < mutateProbability)
+            if (getRandomNumber(0, 100) < mutateProbability)
             {
                 childValue[i] = m_randomItemFunc();
             }
-            else if (GetRandomNumber(0, 100) < parentRatio)
+            else if (getRandomNumber(0, 100) < parentRatio)
             {
                 childValue[i] = mother[i];
             }
@@ -196,7 +196,7 @@ private:
     }
 
     // Calculates population fitness values in parallel.
-    void CalculatePopulationFitnessValues()
+    void calculatePopulationFitnessValues()
     {
         // Create thread pool to calculate fitness functions.
         ThreadPool  tp(std::thread::hardware_concurrency());
@@ -205,10 +205,10 @@ private:
         std::vector<std::future<void>>  results;
         for (std::size_t i=0; i<m_maxPopulation; ++i)
         {
-            auto futureRet = tp.Enqueue([&](std::size_t n)
+            auto futureRet = tp.enqueue([&](std::size_t n)
             {
                 auto & individual = m_population[n];
-                individual.SetFitness(m_fitnessFunc(individual.GetValue()));
+                individual.setFitness(m_fitnessFunc(individual.getValue()));
             }, i);
 
             results.emplace_back(std::move(futureRet));
@@ -222,17 +222,17 @@ private:
         }
     }
 
-    std::size_t GetRandomNumber(const std::size_t min, const std::size_t max)
+    std::size_t getRandomNumber(const std::size_t min, const std::size_t max)
     {
         return std::uniform_int_distribution<std::size_t>(min, max)(m_rndEngine);
     }
 
     // Sorts all individuals in current population based on their fitness values. The highest value is the best.
-    void SortIndividuals()
+    void sortIndividuals()
     {
         std::sort(m_population.begin(), m_population.end(), [](const Individual<T> & left, const Individual<T> & right)
         {
-            return left.GetFitness() > right.GetFitness();
+            return left.getFitness() > right.getFitness();
         });
     }
 
@@ -264,34 +264,34 @@ public:
     {
     }
 
-    void SetFitnessFunc(std::function<float(const std::vector<T>& value)> func)
+    void setFitnessFunc(std::function<float(const std::vector<T>& value)> func)
     {
-        m_population.SetFitnessFunc(func);
+        m_population.setFitnessFunc(func);
     }
 
-    void SetRandomItemFunc(std::function<T()>&& func)
+    void setRandomItemFunc(std::function<T()>&& func)
     {
-        m_population.SetRandomItemFunc(std::move(func));
+        m_population.setRandomItemFunc(std::move(func));
     }
 
-    void CreateInitialPopulation()
+    void createInitialPopulation()
     {
         m_generation = 1;
-        m_population.CreateInitialGeneration();
+        m_population.createInitialGeneration();
     }
 
-    void CreateNextPopulation()
+    void createNextPopulation()
     {
         m_generation++;
-        m_population.CreateNextGeneration();
+        m_population.createNextGeneration();
     }
 
-    const Individual<T> & GetBestIndividual() const
+    const Individual<T> & getBestIndividual() const
     {
-        return m_population.GetBestIndividual();
+        return m_population.getBestIndividual();
     }
 
-    std::size_t GetGeneration() const
+    std::size_t getGeneration() const
     {
         return m_generation;
     }

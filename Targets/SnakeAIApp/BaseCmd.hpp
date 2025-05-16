@@ -18,7 +18,7 @@ class BaseCmd
 public:
     virtual ~BaseCmd() = default;
 
-    virtual void Run(int argc, const char * argv[]) = 0;
+    virtual void run(int argc, const char * argv[]) = 0;
 };
 
 }

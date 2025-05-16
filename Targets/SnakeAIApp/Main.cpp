@@ -51,12 +51,12 @@ int main(const int argc, const char* argv[])
         else if (args[0] == "noai")
         {
             sai::cmd::NoAICmd cmd;
-            cmd.Run(argc, argv);
+            cmd.run(argc, argv);
         }
         else if (args[0] == "ga")
         {
             sai::cmd::GACmd cmd;
-            cmd.Run(argc, argv);
+            cmd.run(argc, argv);
         }
         else
         {

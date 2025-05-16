@@ -27,7 +27,7 @@
 namespace sai::cmd
 {
 
-void GACmd::Run(const int argc, const char *argv[])
+void GACmd::run(const int argc, const char *argv[])
 {
     static constexpr char USAGE[] =
     R"(
@@ -71,17 +71,17 @@ void GACmd::Run(const int argc, const char *argv[])
         return;
     }
 
-    if (!ValidateArguments(args, USAGE))
+    if (!validateArguments(args, USAGE))
     {
         return;
     }
 
     // Execute the command.
-    ExecuteCommand(args);
+    executeCommand(args);
 }
 
 
-bool GACmd::ValidateArguments(std::map <std::string, docopt::value>& args, const char* USAGE)
+bool GACmd::validateArguments(std::map <std::string, docopt::value>& args, const char* USAGE)
 {
     // Show help if necessary
     if (args["-h"] || args["--help"])
@@ -127,7 +127,7 @@ bool GACmd::ValidateArguments(std::map <std::string, docopt::value>& args, const
 }
 
 
-void GACmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
+void GACmd::executeCommand(std::map <std::string, docopt::value> & args)
 {
     const std::string modelFilename = args["--modelfile"].asString();
 
@@ -145,16 +145,16 @@ void GACmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
 
     if (args["play"].asBool())
     {
-        PlayModel(modelFilename);
+        playModel(modelFilename);
     }
     else if (args["train"].asBool())
     {
-        TrainModel(modelFilename);
+        trainModel(modelFilename);
     }
 }
 
 
-void GACmd::PlayModel(const std::string & modelFilename) {
+void GACmd::playModel(const std::string & modelFilename) {
     std::random_device rndDev;
     const int rndSeed = static_cast<int>(rndDev());
     const int windowWidth  = m_boardWidth  * m_blockSize;
@@ -181,7 +181,7 @@ void GACmd::PlayModel(const std::string & modelFilename) {
     SnakeGame   snakeGame(m_boardWidth, m_boardHeight, rndSeed);
 
     // Create neural network to determine snakes next steps.
-    const auto ffnn = CreateFFNN();
+    const auto ffnn = createFFNN();
     aix::load(*ffnn, modelFilename);
 
     // Initialize blocks to render on windows.
@@ -204,37 +204,37 @@ void GACmd::PlayModel(const std::string & modelFilename) {
         const float deltaTime = clock.restart().asSeconds();
 
         // Processes window and keypress events.
-        ProcessEvents(elapsedTimeMax);
+        processEvents(elapsedTimeMax);
 
         // Call game update only every one second to slow down the snake movement.
         elapsedTime += deltaTime;
         if (elapsedTime > elapsedTimeMax)
         {
-            CalculateGameNextStep(snakeGame, ffnn);
-            UpdateGameBoardsDrawableBlocks(snakeGame);
+            calculateGameNextStep(snakeGame, ffnn);
+            updateGameBoardsDrawableBlocks(snakeGame);
             elapsedTime = 0;
         }
 
-        text.setString("Score: " + std::to_string(snakeGame.GetScore()));
-        DrawGameBoard(text);
+        text.setString("Score: " + std::to_string(snakeGame.getScore()));
+        drawGameBoard(text);
     }
 }
 
 
-float GACmd::FitnessFunc(const std::vector<float>& value, const size_t samplingSize, const int rndSeed) const
+float GACmd::fitnessFunc(const std::vector<float>& value, const size_t samplingSize, const int rndSeed) const
 {
-    return SimulateSnakeGames(samplingSize, value, rndSeed);
+    return simulateSnakeGames(samplingSize, value, rndSeed);
 }
 
 
-void GACmd::TrainModel(const std::string & modelFilename)
+void GACmd::trainModel(const std::string & modelFilename)
 {
     std::random_device rndDev;
     std::mt19937 rndEngine(rndDev());
     const int rndSeed = static_cast<int>(rndDev());
 
     std::vector<float> data;
-    aix::ext::serializeModule(*CreateFFNN(), data);
+    aix::ext::serializeModule(*createFFNN(), data);
     const auto geneticVectorSize = data.size();
 
     // Create genetic algorithm to search best weights and biases for a neural network.
@@ -243,10 +243,10 @@ void GACmd::TrainModel(const std::string & modelFilename)
 
     // This method will calculate fitness value for each individual. Used bind here since using lambda might have a
     // state copy issue on Windows.
-    ga.SetFitnessFunc(std::bind(&GACmd::FitnessFunc, this, std::placeholders::_1, m_gaSamplingSize, rndSeed));
+    ga.setFitnessFunc(std::bind(&GACmd::fitnessFunc, this, std::placeholders::_1, m_gaSamplingSize, rndSeed));
 
     // This method will generate random item (genes) for a genetic vector/material (chromosome).
-    ga.SetRandomItemFunc([&]() -> float
+    ga.setRandomItemFunc([&]() -> float
     {
         // Scale the random fraction to the desired range [min, max]
         constexpr float min = -1.0f;
@@ -254,36 +254,36 @@ void GACmd::TrainModel(const std::string & modelFilename)
         return std::uniform_real_distribution<float>(min, max)(rndEngine);
     });
 
-    ga.CreateInitialPopulation();
+    ga.createInitialPopulation();
 
     float bestFitness = -std::numeric_limits<float>::max();
 
     std::cout << "Total Model Parameters: " << geneticVectorSize << std::endl;
 
-    while (ga.GetGeneration() < m_maxGeneration)
+    while (ga.getGeneration() < m_maxGeneration)
     {
         // Save the best individual.
-        if (const float fitness = ga.GetBestIndividual().GetFitness(); fitness > bestFitness)
+        if (const float fitness = ga.getBestIndividual().getFitness(); fitness > bestFitness)
         {
-            auto ffnn = CreateFFNN();
+            auto ffnn = createFFNN();
             // Set genes vector (weights and biases) coming from genetic algorithm.
-            aix::ext::deserializeModule(*ffnn, ga.GetBestIndividual().GetValue());
+            aix::ext::deserializeModule(*ffnn, ga.getBestIndividual().getValue());
             aix::save(*ffnn, modelFilename);
 
             bestFitness = fitness;
         }
 
-        std::cout << "Generation: " << ga.GetGeneration()
+        std::cout << "Generation: " << ga.getGeneration()
                   << "  Fitness: " << static_cast<ssize_t>(bestFitness) << std::endl;
-        ga.CreateNextPopulation();
+        ga.createNextPopulation();
     }
 }
 
 
-std::shared_ptr<aix::nn::Sequential> GACmd::CreateFFNN()
+std::shared_ptr<aix::nn::Sequential> GACmd::createFFNN()
 {
     // First determine genetic vector size.
-    const auto modelInputSize = SnakeGame::GetParameterSize();
+    const auto modelInputSize = SnakeGame::getParameterSize();
 
     auto model = std::make_shared<aix::nn::Sequential>();
     model->add(new aix::nn::Linear(modelInputSize, modelInputSize));
@@ -296,10 +296,10 @@ std::shared_ptr<aix::nn::Sequential> GACmd::CreateFFNN()
 }
 
 
-void GACmd::CalculateGameNextStep(SnakeGame& snakeGame, const std::shared_ptr<aix::nn::Sequential>& ffnn)
+void GACmd::calculateGameNextStep(SnakeGame& snakeGame, const std::shared_ptr<aix::nn::Sequential>& ffnn)
 {
     // Get game parameters to use as inputs to neural network model.
-    const auto modelInputs = snakeGame.GetParameters();
+    const auto modelInputs = snakeGame.getParameters();
     const auto inputs = aix::Tensor(modelInputs.data(), modelInputs.size(), aix::DataType::kFloat32,
                                     aix::Shape{1, modelInputs.size()});
 
@@ -307,20 +307,20 @@ void GACmd::CalculateGameNextStep(SnakeGame& snakeGame, const std::shared_ptr<ai
     const auto outputs = ffnn->forward(inputs);
 
     // Determine the best direction from model outputs. The highest value should be the new direction.
-    snakeGame.SetDirection(DetermineSnakeDirection(outputs));
+    snakeGame.setDirection(determineSnakeDirection(outputs));
 
     // Update game.
-    snakeGame.Update();
+    snakeGame.update();
 
     // Prepare game board to Render.
-    if (snakeGame.GetGameState() != SnakeGameState::kRunning)
+    if (snakeGame.getGameState() != SnakeGameState::kRunning)
     {
-        snakeGame.Reset();
+        snakeGame.reset();
     }
 }
 
 
-void GACmd::UpdateGameBoardsDrawableBlocks(const SnakeGame& snakeGame)
+void GACmd::updateGameBoardsDrawableBlocks(const SnakeGame& snakeGame)
 {
     // Update game board block colors to reflect the changes.
     int blockIndex = 0;
@@ -330,7 +330,7 @@ void GACmd::UpdateGameBoardsDrawableBlocks(const SnakeGame& snakeGame)
         {
             auto & block = m_boardBlocks[blockIndex];
             block.setPosition({static_cast<float>(x * m_blockSize), static_cast<float>(y * m_blockSize)});
-            switch (snakeGame.GetBoardObject(x, y))
+            switch (snakeGame.getBoardObject(x, y))
             {
                 case BoardObjType::kSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
                 case BoardObjType::kSnakeBody:   block.setFillColor(sf::Color::Green);   break;
@@ -343,7 +343,7 @@ void GACmd::UpdateGameBoardsDrawableBlocks(const SnakeGame& snakeGame)
 }
 
 
-void GACmd::DrawGameBoard(const sf::Text& text)
+void GACmd::drawGameBoard(const sf::Text& text)
 {
     // Clear the window with a black color
     m_window.clear(sf::Color::Black);
@@ -361,11 +361,11 @@ void GACmd::DrawGameBoard(const sf::Text& text)
 }
 
 
-float GACmd::SimulateSnakeGames(const std::size_t samplingSize, const std::vector<float> & genesVector,
+float GACmd::simulateSnakeGames(const std::size_t samplingSize, const std::vector<float> & genesVector,
                                 const int rndSeed) const
 {
     // Set up a neural network.
-    const auto ffnn = CreateFFNN();
+    const auto ffnn = createFFNN();
 
     // Set weights and biases coming from genetic algorithm.
     aix::ext::deserializeModule(*ffnn, genesVector);   // value = genetic material vector = chromosome
@@ -382,10 +382,10 @@ float GACmd::SimulateSnakeGames(const std::size_t samplingSize, const std::vecto
     // Run the same model N times to assess quality of the individual (chromosome/array of genes/NN Model weights).
     for (std::size_t i=0; i<samplingSize; ++i)
     {
-        while (snakeGame.GetGameState() == SnakeGameState::kRunning)
+        while (snakeGame.getGameState() == SnakeGameState::kRunning)
         {
             // Get game parameters to use as inputs to neural network model.
-            auto modelInputs = snakeGame.GetParameters();
+            auto modelInputs = snakeGame.getParameters();
             const auto inputs = aix::Tensor(modelInputs.data(), modelInputs.size(), aix::DataType::kFloat32,
                                             aix::Shape{1, modelInputs.size()});
 
@@ -393,27 +393,27 @@ float GACmd::SimulateSnakeGames(const std::size_t samplingSize, const std::vecto
             auto outputs = ffnn->forward(inputs);
 
             // Determine the best direction from model outputs. The highest value should be the new direction.
-            snakeGame.SetDirection(DetermineSnakeDirection(outputs));
+            snakeGame.setDirection(determineSnakeDirection(outputs));
 
             // Update game.
-            snakeGame.Update();
+            snakeGame.update();
         }
 
-        if (snakeGame.GetGameState() == SnakeGameState::kFailedHitWall ||
-            snakeGame.GetGameState() == SnakeGameState::kFailedHitItself)
+        if (snakeGame.getGameState() == SnakeGameState::kFailedHitWall ||
+            snakeGame.getGameState() == SnakeGameState::kFailedHitItself)
         {
             avgDeaths++;
         }
-        if (snakeGame.GetGameState() == SnakeGameState::kFailedLongLoop)
+        if (snakeGame.getGameState() == SnakeGameState::kFailedLongLoop)
         {
             avgLongLoopFails++;
         }
 
-        highestScore = std::max<float>(highestScore, snakeGame.GetScore());
-        avgSteps += snakeGame.GetSteps();
-        avgScore += snakeGame.GetScore();
+        highestScore = std::max<float>(highestScore, snakeGame.getScore());
+        avgSteps += snakeGame.getSteps();
+        avgScore += snakeGame.getScore();
 
-        snakeGame.Reset();
+        snakeGame.reset();
     }
 
     // Return fitness value to tell the genetic algorithm how well the neural network has played the game so far.
@@ -428,7 +428,7 @@ float GACmd::SimulateSnakeGames(const std::size_t samplingSize, const std::vecto
 }
 
 
-SnakeDirection GACmd::DetermineSnakeDirection(const aix::Tensor& outputs)
+SnakeDirection GACmd::determineSnakeDirection(const aix::Tensor& outputs)
 {
     const auto o0 = outputs.value().getValueAt<float>({0, 0});
     const auto o1 = outputs.value().getValueAt<float>({0, 1});
@@ -446,7 +446,7 @@ SnakeDirection GACmd::DetermineSnakeDirection(const aix::Tensor& outputs)
 }
 
 
-void GACmd::ProcessEvents(float& elapsedTimeMax)
+void GACmd::processEvents(float& elapsedTimeMax)
 {
     // Process events
     while (const auto event = m_window.pollEvent())

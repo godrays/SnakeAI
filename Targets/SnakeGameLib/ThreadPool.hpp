@@ -28,7 +28,7 @@ public:
         // Create threads
         for (size_t i=0; i<maxThreadCount; ++i)
         {
-            m_workers.emplace_back([this]() { ThreadFunc(); });
+            m_workers.emplace_back([this]() { threadFunc(); });
         }
     }
 
@@ -49,7 +49,7 @@ public:
 
     // Add new task item to the queue
     template<class F, class... Args>
-    auto Enqueue(F&& f, Args&&... args) -> std::future<typename std::invoke_result_t<F, Args...>>
+    auto enqueue(F&& f, Args&&... args) -> std::future<typename std::invoke_result_t<F, Args...>>
     {
         using return_type = typename std::invoke_result_t<F, Args...>;
 
@@ -75,7 +75,7 @@ public:
 
 private:
 
-    void ThreadFunc()
+    void threadFunc()
     {
         for (;;)
         {

@@ -33,23 +33,23 @@ public:
     // Destructor
     ~NoAICmd() override = default;
 
-    void Run(int argc, const char * argv[]) override;
+    void run(int argc, const char * argv[]) override;
 
 protected:
     // Validate required arguments.
-    static bool ValidateArguments(std::map<std::string, docopt::value> & args, const char * USAGE);
+    static bool validateArguments(std::map<std::string, docopt::value> & args, const char * USAGE);
 
     // Executes the command based on the given commandline parameter options.
-    void ExecuteCommand(std::map<std::string, docopt::value> & args);
+    void executeCommand(std::map<std::string, docopt::value> & args);
 
     // Draws game board.
-    void DrawGameBoard(const sf::Text& text);
+    void drawGameBoard(const sf::Text& text);
 
     // Updates position of the drawable game board blocks.
-    void UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame);
+    void updateGameBoardsDrawableBlocks(SnakeGame& snakeGame);
 
     // Processes window and keypress events.
-    void ProcessEvents(SnakeGame& snakeGame, bool & updateGame);
+    void processEvents(SnakeGame& snakeGame, bool & updateGame);
 
 private:
     int m_boardWidth{10};

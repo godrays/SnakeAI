@@ -34,39 +34,39 @@ public:
     // Destructor
     ~GACmd() override = default;
 
-    void Run(int argc, const char * argv[]) override;
+    void run(int argc, const char * argv[]) override;
 
 protected:
     // Validate required arguments.
-    static bool ValidateArguments(std::map<std::string, docopt::value> & args, const char * USAGE);
+    static bool validateArguments(std::map<std::string, docopt::value> & args, const char * USAGE);
 
     // Executes the command based on the given commandline parameter options.
-    void ExecuteCommand(std::map<std::string, docopt::value> & args);
+    void executeCommand(std::map<std::string, docopt::value> & args);
 
-    void PlayModel(const std::string & modelFilename);
-    void TrainModel(const std::string & modelFilename);
+    void playModel(const std::string & modelFilename);
+    void trainModel(const std::string & modelFilename);
 
     // Creates and returns a pre-configured FFNN Model object.
-    static std::shared_ptr<aix::nn::Sequential> CreateFFNN();
+    static std::shared_ptr<aix::nn::Sequential> createFFNN();
 
-    float SimulateSnakeGames(std::size_t samplingSize, const std::vector<float> & genesVector, int rndSeed) const;
+    float simulateSnakeGames(std::size_t samplingSize, const std::vector<float> & genesVector, int rndSeed) const;
 
     // Calculates game's next step.
-    static void CalculateGameNextStep(SnakeGame& snakeGame, const std::shared_ptr<aix::nn::Sequential>& ffnn) ;
+    static void calculateGameNextStep(SnakeGame& snakeGame, const std::shared_ptr<aix::nn::Sequential>& ffnn) ;
 
     // Draws game board.
-    void DrawGameBoard(const sf::Text& text);
+    void drawGameBoard(const sf::Text& text);
 
     // Determine direction of the snake from ML model outputs.
-    static SnakeDirection DetermineSnakeDirection(const aix::Tensor& outputs) ;
+    static SnakeDirection determineSnakeDirection(const aix::Tensor& outputs) ;
 
     // Updates position of the drawable game board blocks.
-    void UpdateGameBoardsDrawableBlocks(const SnakeGame& snakeGame);
+    void updateGameBoardsDrawableBlocks(const SnakeGame& snakeGame);
 
     // Processes window and keypress events.
-    void ProcessEvents(float &elapsedTimeMax);
+    void processEvents(float &elapsedTimeMax);
 
-    float FitnessFunc(const std::vector<float>& value, size_t samplingSize, int rndSeed) const;
+    float fitnessFunc(const std::vector<float>& value, size_t samplingSize, int rndSeed) const;
 
 private:
     int m_boardWidth{10};

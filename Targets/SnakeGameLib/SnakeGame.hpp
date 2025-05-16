@@ -70,11 +70,11 @@ public:
         // Initialize board 2D game board.
         m_board.resize(m_boardHeight, std::vector<BoardObjType>(m_boardWidth, BoardObjType::kEmpty));
 
-        Reset();
+        reset();
     }
 
     // Returns 2D Game board.
-    BoardObjType GetBoardObject(const int x, const int y) const
+    BoardObjType getBoardObject(const int x, const int y) const
     {
         if (x < 0 || y < 0 || x >= m_boardWidth || y >= m_boardHeight)
         {
@@ -84,7 +84,7 @@ public:
     }
 
     // Set direction of snake
-    void SetDirection(const SnakeDirection & newDir)
+    void setDirection(const SnakeDirection & newDir)
     {
         // Ignore direction change if the change is opposite side of the direction.
         if (m_direction == SnakeDirection::kUp    && newDir == SnakeDirection::kDown)  return;
@@ -96,64 +96,64 @@ public:
     }
 
     // Returns direction of snake
-    SnakeDirection GetDirection() const
+    SnakeDirection getDirection() const
     {
         return m_direction;
     }
 
     // Returns game score.
-    int GetScore() const
+    int getScore() const
     {
         return m_score;
     }
 
-    SnakeGameState GetGameState() const
+    SnakeGameState getGameState() const
     {
         return m_gameState;
     }
 
     // Move snake and check environment.
-    void Update();
+    void update();
 
     // Resets game into initial state.
-    void Reset();
+    void reset();
 
     // Returns parameter size that can be used in AI model training.
-    static std::size_t GetParameterSize()
+    static std::size_t getParameterSize()
     {
         return m_parameterSize;
     }
 
     // Returns parameters that can be used in AI model training.
-    std::vector<float> GetParameters() const;
+    std::vector<float> getParameters() const;
 
     // Returns distance from snake heads to apple.
-    float GetDistanceToApple() const;
+    float getDistanceToApple() const;
 
     // Return number of steps  snake took without eating an apple.
-    std::size_t GetSteps() const
+    std::size_t getSteps() const
     {
         return m_steps;
     }
 
 private:
     // Return a random number between min and max.
-    int GetRandomNumber(int min, int max);
+    int getRandomNumber(int min, int max);
 
     // Clears the board.
-    void ClearBoard();
+    void clearBoard();
 
     // Render snake onto the 2D game board.
-    void RenderSnake();
+    void renderSnake();
 
     // Render apple onto the 2D game board.
-    void RenderApple();
+    void renderApple();
 
     // Returns true if a spot found and for an Apple on the board.
-    bool PlaceApple();
+    bool placeApple();
 
     // Returns distance in block for cross directions.
-    float GetDistance(const Position & pos, int xDir, int yDir, bool useSnakeBody) const;
+    float getDistance(const Position & pos, int xDir, int yDir, bool useSnakeBody) const;
 
 private:
     int  m_boardWidth;

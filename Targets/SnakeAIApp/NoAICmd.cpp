@@ -22,7 +22,7 @@
 namespace sai::cmd
 {
 
-void NoAICmd::Run(const int argc, const char *argv[])
+void NoAICmd::run(const int argc, const char *argv[])
 {
     static constexpr char USAGE[] =
     R"(
@@ -54,17 +54,17 @@ void NoAICmd::Run(const int argc, const char *argv[])
         return;
     }
 
-    if (!ValidateArguments(args, USAGE))
+    if (!validateArguments(args, USAGE))
     {
         return;
     }
 
     // Execute the command.
-    ExecuteCommand(args);
+    executeCommand(args);
 }
 
 
-bool NoAICmd::ValidateArguments(std::map <std::string, docopt::value> &args, const char *USAGE)
+bool NoAICmd::validateArguments(std::map <std::string, docopt::value> &args, const char *USAGE)
 {
     // Show help if necessary
     if (args["-h"] || args["--help"])
@@ -97,7 +97,7 @@ bool NoAICmd::ValidateArguments(std::map <std::string, docopt::value> &args, con
 }
 
 
-void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
+void NoAICmd::executeCommand(std::map <std::string, docopt::value> & args)
 {
     std::random_device rndDev;
     const int rndSeed = static_cast<int>(rndDev());
@@ -148,31 +148,31 @@ void NoAICmd::ExecuteCommand(std::map <std::string, docopt::value> & args)
         const float deltaTime = clock.restart().asSeconds();
 
         // Processes window and keypress events.
-        ProcessEvents(snakeGame, updateGame);
+        processEvents(snakeGame, updateGame);
 
         elapsedTime += deltaTime;
 
         // Call game update only every one second to slow down the snake movement.
         if (elapsedTime >= 10 || (elapsedTime > 0.25 && updateGame))
         {
-            snakeGame.Update();
-            if (snakeGame.GetGameState() != SnakeGameState::kRunning)
+            snakeGame.update();
+            if (snakeGame.getGameState() != SnakeGameState::kRunning)
             {
-                snakeGame.Reset();
+                snakeGame.reset();
             }
 
-            UpdateGameBoardsDrawableBlocks(snakeGame);
+            updateGameBoardsDrawableBlocks(snakeGame);
 
             elapsedTime = 0;
         }
 
-        text.setString("Score: " + std::to_string(snakeGame.GetScore()));
-        DrawGameBoard(text);
+        text.setString("Score: " + std::to_string(snakeGame.getScore()));
+        drawGameBoard(text);
     }
 }
 
 
-void NoAICmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
+void NoAICmd::updateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
 {
     // Update game board block colors to reflect the changes.
     int blockIndex = 0;
@@ -182,7 +182,7 @@ void NoAICmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
         {
             auto & block = m_boardBlocks[blockIndex];
             block.setPosition({static_cast<float>(x * m_blockSize), static_cast<float>(y * m_blockSize)});
-            switch (snakeGame.GetBoardObject(x, y))
+            switch (snakeGame.getBoardObject(x, y))
             {
                 case BoardObjType::kSnakeHead:   block.setFillColor(sf::Color::Yellow);  break;
                 case BoardObjType::kSnakeBody:   block.setFillColor(sf::Color::Green);   break;
@@ -195,7 +195,7 @@ void NoAICmd::UpdateGameBoardsDrawableBlocks(SnakeGame& snakeGame)
 }
 
 
-void NoAICmd::DrawGameBoard(const sf::Text& text)
+void NoAICmd::drawGameBoard(const sf::Text& text)
 {
     // Clear the window with a black color.
     m_window.clear(sf::Color::Black);
@@ -213,7 +213,7 @@ void NoAICmd::DrawGameBoard(const sf::Text& text)
 }
 
 
-void NoAICmd::ProcessEvents(SnakeGame& snakeGame, bool & updateGame)
+void NoAICmd::processEvents(SnakeGame& snakeGame, bool & updateGame)
 {
     // Process events
     while (const auto event = m_window.pollEvent())
@@ -233,10 +233,10 @@ void NoAICmd::ProcessEvents(SnakeGame& snakeGame, bool & updateGame)
             switch (event->getIf<sf::Event::KeyPressed>()->code)
             {
                 case sf::Keyboard::Key::Escape:     m_window.close();                                break;
-                case sf::Keyboard::Key::Left:       snakeGame.SetDirection(SnakeDirection::kLeft);   break;
-                case sf::Keyboard::Key::Right:      snakeGame.SetDirection(SnakeDirection::kRight);  break;
-                case sf::Keyboard::Key::Up:         snakeGame.SetDirection(SnakeDirection::kUp);     break;
-                case sf::Keyboard::Key::Down:       snakeGame.SetDirection(SnakeDirection::kDown);   break;
+                case sf::Keyboard::Key::Left:       snakeGame.setDirection(SnakeDirection::kLeft);   break;
+                case sf::Keyboard::Key::Right:      snakeGame.setDirection(SnakeDirection::kRight);  break;
+                case sf::Keyboard::Key::Up:         snakeGame.setDirection(SnakeDirection::kUp);     break;
+                case sf::Keyboard::Key::Down:       snakeGame.setDirection(SnakeDirection::kDown);   break;
                 default: break;
             }
         }
