@@ -80,7 +80,7 @@ $ SnakeAIApp ga play --modelfile=snakeai.mdl
 
 Follow these steps to build the project and make it deployment-ready.
 
-Currently, it supports only macOS and has been tested on Sonoma.
+Currently, it has been built and tested on `macOS Sonoma` and `Windows 10` (MSVC) with no issues.
 
 ```bash
 $ python build.py build release build-release product-rel
