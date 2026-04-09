@@ -155,6 +155,8 @@ void GACmd::executeCommand(std::map <std::string, docopt::value> & args)
 
 
 void GACmd::playModel(const std::string & modelFilename) {
+    aix::NoGradGuard grad;
+
     std::random_device rndDev;
     const int rndSeed = static_cast<int>(rndDev());
     const int windowWidth  = m_boardWidth  * m_blockSize;
@@ -182,7 +184,7 @@ void GACmd::playModel(const std::string & modelFilename) {
 
     // Create neural network to determine snakes next steps.
     const auto ffnn = createFFNN();
-    aix::load(*ffnn, modelFilename);
+    aix::nn::load(*ffnn, modelFilename);
 
     // Initialize blocks to render on windows.
     m_boardBlocks.resize(m_boardWidth * m_boardHeight);
@@ -268,7 +270,7 @@ void GACmd::trainModel(const std::string & modelFilename)
             auto ffnn = createFFNN();
             // Set genes vector (weights and biases) coming from genetic algorithm.
             aix::ext::deserializeModule(*ffnn, ga.getBestIndividual().getValue());
-            aix::save(*ffnn, modelFilename);
+            aix::nn::save(*ffnn, modelFilename);
 
             bestFitness = fitness;
         }
