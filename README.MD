@@ -10,7 +10,7 @@ The AI agent undergoes an evolutionary process, where its ability to navigate th
 
 The examples below are from the four pre-trained models that solves the problem effectively.
 
-<img src="https://github.com/godrays/snakeai/Resources/SnakeAI.gif" alt="SnakeAIGIF"/>
+![Snake AI GIF](./Resources/SnakeAI.gif)
 
 ### Genetic Algorithm
 
